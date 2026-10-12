@@ -174,7 +174,7 @@ export async function saveBrandProfile(input: {
   const name = input.name.trim().slice(0, 80);
   const website = input.website.trim().slice(0, 200);
   if (name.length < 2) throw new HttpError(400, "add your company name");
-  if (!websiteDomain(website)) throw new HttpError(400, "add your company website, e.g. brewandco.example");
+  if (!websiteDomain(website)) throw new HttpError(400, "add your company website, e.g. levis.com");
   const uses = input.uses.filter((u) => (BRAND_USES as readonly string[]).includes(u));
   if (uses.length === 0) throw new HttpError(400, "pick at least one intended use");
   const monthlyRenders = (MONTHLY_RENDERS as readonly string[]).includes(input.monthlyRenders) ? input.monthlyRenders : MONTHLY_RENDERS[0];
