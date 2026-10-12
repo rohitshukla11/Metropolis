@@ -43,8 +43,9 @@ contract Deploy is Script {
 
         string memory j = "deployment";
         vm.serializeUint(j, "chainId", block.chainid);
-        // The block the script simulated against; the first contract lands a few blocks later, so
-        // deployments/arbitrum-sepolia.json is corrected to CreatorRegistry's creation block.
+        // The block the script simulated against, corrected afterwards to CreatorRegistry's creation
+        // block. On Arbitrum, block.number inside the EVM is the L1 block number, so the recorded
+        // startBlock is the L2 block from the creation receipt instead.
         vm.serializeUint(j, "startBlock", block.number);
         vm.serializeAddress(j, "usdc", ArbitrumSepolia.USDC);
         vm.serializeAddress(j, "owner", deployer);

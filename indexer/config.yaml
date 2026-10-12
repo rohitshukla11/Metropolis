@@ -37,7 +37,7 @@ field_selection:
   transaction_fields: [hash]
 chains:
   - id: 421614
-    start_block: ${ENVIO_START_BLOCK:-0}
+    start_block: ${ENVIO_START_BLOCK:-318467180}
     rpc:
       - url: ${ENVIO_RPC_URL:-https://sepolia-rollup.arbitrum.io/rpc}
         for: ${ENVIO_RPC_FOR:-sync}
@@ -45,10 +45,10 @@ chains:
         interval_ceiling: 10000
     contracts:
       - name: CreatorRegistry
-        address: "0x0000000000000000000000000000000000000000"
+        address: "0xE096452bE57EE285c3D7d29752d1Ac6854b538D5"
       - name: LicenseRegistry
-        address: "0x0000000000000000000000000000000000000000"
+        address: "0xE344b053a8935ACB887863Bb6201B6Fc9Cbc2320"
       - name: LicenseEscrow
-        address: "0x0000000000000000000000000000000000000000"
+        address: "0x50a730C0e9998e1F40a3211f00239ea60Be08163"
       - name: ReceiptAnchor
-        address: "0x0000000000000000000000000000000000000000"
+        address: "0x448B136468289216036a4C13995EA02C39F6B871"

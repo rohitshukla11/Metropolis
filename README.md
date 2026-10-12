@@ -270,8 +270,30 @@ Not built yet:
 
 ## Deployments (Arbitrum Sepolia, chain 421614)
 
-Not deployed yet. Addresses, transactions and measured confirmation times go here and in
-[`deployments/arbitrum-sepolia.json`](deployments).
+Deployed 2026-10-12 (UTC) from `0x68343Aa0598b7FCAA102769D172e59cdDfae10f2`, starting at L2 block 318,467,180. All four
+contracts are verified on Arbiscan. Machine-readable:
+[`deployments/arbitrum-sepolia.json`](deployments/arbitrum-sepolia.json).
+
+| Contract | Address | Deploy tx |
+|---|---|---|
+| CreatorRegistry | [`0xE096452bE57EE285c3D7d29752d1Ac6854b538D5`](https://sepolia.arbiscan.io/address/0xE096452bE57EE285c3D7d29752d1Ac6854b538D5#code) | [`0x44057eaf…`](https://sepolia.arbiscan.io/tx/0x44057eafbaa8225b778ad8e98e0c548b70aaffc48dff445982eae5c0943d610f) |
+| LicenseRegistry | [`0xE344b053a8935ACB887863Bb6201B6Fc9Cbc2320`](https://sepolia.arbiscan.io/address/0xE344b053a8935ACB887863Bb6201B6Fc9Cbc2320#code) | [`0x4504b9e3…`](https://sepolia.arbiscan.io/tx/0x4504b9e39d3381ab7624b7b3215901824bc6370d3146499bea9cdeb9bd971513) |
+| ReceiptAnchor | [`0x448B136468289216036a4C13995EA02C39F6B871`](https://sepolia.arbiscan.io/address/0x448B136468289216036a4C13995EA02C39F6B871#code) | [`0xc6af292c…`](https://sepolia.arbiscan.io/tx/0xc6af292ca8b8af9ceebe2ddc30ca106af506f2e370f27d17c6b1e04b34849c74) |
+| LicenseEscrow | [`0x50a730C0e9998e1F40a3211f00239ea60Be08163`](https://sepolia.arbiscan.io/address/0x50a730C0e9998e1F40a3211f00239ea60Be08163#code) | [`0xf43c271b…`](https://sepolia.arbiscan.io/tx/0xf43c271bfcf5cf896ab14868e3790a969b854fb3ecab891b7b90d4aa1e06f1ba) |
+| USDC (Circle) | [`0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d`](https://sepolia.arbiscan.io/address/0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d) | [Circle docs](https://developers.circle.com/stablecoins/usdc-contract-addresses) |
+
+Wiring transactions:
+
+- `LicenseRegistry.setEscrow`: [`0x33c10280…`](https://sepolia.arbiscan.io/tx/0x33c10280b85feb7ca4a038112f1921ff8a250fa05789b32ec1f340caa08053e6)
+- `ReceiptAnchor.setEscrow`: [`0xf6f98df9…`](https://sepolia.arbiscan.io/tx/0xf6f98df95202a3e95a9897c44b1b52a2b1b322d2970eb6ac1a162bea4f69860a)
+- `LicenseEscrow.setRenderAgent`: [`0xbca89ed9…`](https://sepolia.arbiscan.io/tx/0xbca89ed9f1c2581857d0099b9bf0cff02883c62db086731c51a27d01374fcf7f)
+
+Roles:
+
+- **Attester:** `0x8d53e13407890e18022bfAa413193ba4C6DCc1a5`.
+- **Render agent:** `0x331f0F6fb5c3c09d84Ae2C1D533b4F739dA6E87d`, the render service's local key (`RENDER_AGENT_KEY_FILE`).
+- **Treasury and owner:** the deployer.
+- **Fee:** 10%.
 
 ## Threat model and honest limits
 

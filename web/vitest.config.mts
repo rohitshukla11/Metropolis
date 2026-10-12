@@ -9,5 +9,7 @@ export default defineConfig({
       "server-only": fileURLToPath(new URL("./lib/server/test-server-only.ts", import.meta.url)),
     },
   },
-  test: { environment: "node", include: ["lib/**/*.test.ts"], testTimeout: 30_000 },
+  // Files run one at a time: each fork suite starts its own anvil fork, and several at once fetching
+  // state from the public RPC can time out.
+  test: { environment: "node", include: ["lib/**/*.test.ts"], testTimeout: 30_000, fileParallelism: false },
 });
