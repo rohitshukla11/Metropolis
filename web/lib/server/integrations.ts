@@ -85,7 +85,7 @@ export function integrations(): Integration[] {
       configured: historySource() === "envio",
       turnsOn: "Marketplace, dashboards and history served from the indexer",
       env: ["ENVIO_GRAPHQL_URL or ENVIO_PG_URL", "ENVIO_API_TOKEN (indexer/.env, for HyperSync)"],
-      whenMissing: "History comes from cached RPC log scans (100 blocks per call)",
+      whenMissing: "History comes from cached RPC log scans (50,000 blocks per call)",
     },
     {
       key: "render-agent",
