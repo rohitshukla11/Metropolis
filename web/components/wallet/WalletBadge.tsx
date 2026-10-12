@@ -17,18 +17,15 @@ export function WalletBadge() {
     <div className="flex flex-wrap items-center justify-end gap-3 text-[15px]">
       {testBrand && (
         // Local only: shown when the server offers its server-held test brand (TEST_BRAND=1, never in production).
-        <div role="group" aria-label="Act as" className="grid grid-cols-2 rounded-full bg-ink-raised p-1 text-[13px] font-semibold">
-          {(
-            [
-              ["me", "Creator (me)"],
-              ["brand", testBrand.name],
-            ] as const
-          ).map(([v, label]) => (
-            <button key={v} type="button" aria-pressed={actAs === v} onClick={() => setActAs(v)} className={`min-h-9 rounded-full px-3.5 ${actAs === v ? "bg-white text-ink" : "text-grey-dark hover:text-white"}`}>
-              {label}
-            </button>
-          ))}
-        </div>
+        <select
+          aria-label="Act as"
+          value={actAs}
+          onChange={(e) => setActAs(e.target.value === "brand" ? "brand" : "me")}
+          className="min-h-11 rounded-full border border-ink-line-2 bg-ink-raised px-3 text-[14px] text-white"
+        >
+          <option value="me">Creator (me)</option>
+          <option value="brand">Brand: {testBrand.name}</option>
+        </select>
       )}
       {devWallets.length > 0 && (
         <select
