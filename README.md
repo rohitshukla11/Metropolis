@@ -270,6 +270,13 @@ Roadmap:
 - The design tokens (colours, type scale, radii) are reused from my earlier project, Whistle.
 - Built with AI-assisted development using Claude Code, which I directed and reviewed.
 
+## Contributor notes
+
+- **No real brand or product names** in demos, fixtures, tests, docs, screenshots or placeholder text. Use
+  fictional ones, such as "Brew & Co." or "Northline Apparel", and `.example` domains. Infrastructure the
+  app runs on (Arbitrum, Circle, Dynamic, Didit, Gemini and so on) and free email domains in the
+  domain-check logic are the only real names in the code.
+
 ## License
 
 [MIT](LICENSE)

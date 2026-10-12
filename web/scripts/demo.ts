@@ -155,7 +155,7 @@ async function main() {
   let seeded: { note: string; wallets: DevW[] } | null = existsSync(walletsFile) ? JSON.parse(readFileSync(walletsFile, "utf8")) : null;
   if (!seeded) {
     const brandKey = generatePrivateKey();
-    seeded = { note: "DEV ONLY: throwaway test wallets.", wallets: [{ role: "brand", label: "Test brand", address: privateKeyToAccount(brandKey).address, key: brandKey }] };
+    seeded = { note: "DEV ONLY: throwaway test wallets.", wallets: [{ role: "brand", label: "Brew & Co. (test brand)", address: privateKeyToAccount(brandKey).address, key: brandKey }] };
   }
   // A test creator only ever exists on the fork; on Arbitrum Sepolia any old one is dropped from the file.
   seeded.wallets = seeded.wallets.filter((w) => w.role !== "creator" || FORK);

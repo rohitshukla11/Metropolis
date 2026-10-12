@@ -55,9 +55,8 @@ async function sha256Hex(text: string) {
   return Array.from(h, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-/** Filled in for the demo brand (Brew & Co., a fictional coffee brand); the brand can edit it before generating. */
-const DEFAULT_PROMPT =
-  "Holding a Brew & Co. takeaway coffee cup at a sunlit café counter, relaxed smile, plain white t-shirt, natural morning light, lifestyle advertising photo";
+/** A generic starting prompt (no brand or product names); the brand edits it before generating. */
+const DEFAULT_PROMPT = "Smiling in a sunlit café holding a ceramic coffee cup, product shot for a spring campaign";
 
 export default function GeneratePage() {
   return (
