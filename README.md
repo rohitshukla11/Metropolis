@@ -162,7 +162,7 @@ Settings for a deployment on a subdomain of `likeness.site`:
    - `NEXT_PUBLIC_APP_URL`: `https://` plus the domain;
    - `NEXT_PUBLIC_DYNAMIC_ENV_ID`;
    - the secrets, as values. Every `*_FILE` secret has a value form, read when the file is absent:
-     - `ATTESTER_PRIVATE_KEY`, `RENDER_AGENT_PRIVATE_KEY`;
+     - `ATTESTER_PRIVATE_KEY`, `DRIP_PRIVATE_KEY`, `RENDER_AGENT_PRIVATE_KEY`;
      - `C2PA_CERT_PEM`, `C2PA_KEY_PEM` (paste the PEM; `\n` escapes also work);
      - `DIDIT_API_KEY`, `VERIFICATION_LEVEL`, `DIDIT_WORKFLOW_ID_FREE`, `DIDIT_WORKFLOW_ID_FULL`;
      - `GEMINI_API_KEY`, `GEMINI_IMAGE_MODEL`, `GEMINI_IMAGE_SIZE`, `GEMINI_FILTER_MODEL`;
@@ -213,7 +213,7 @@ face model stays on the volume and nothing lives across instances. Set the same 
 | Path | What it does |
 |---|---|
 | `/` | Landing: how a licence runs, measured numbers, example creator cards (sample images, labelled as examples; never a real creator's face), and the calls to become a creator or license a face |
-| `/onboard` | Three steps under one progress bar. **Sign in:** email creates the embedded wallet (Dynamic); registered creators go straight to the dashboard. **Verify it's you:** one screen with the consent and **Agree and verify**, which signs it and starts Didit (ID 18+, liveness, selfie-to-ID face match); plain-language results with Try again. **Protect your photos:** three guided photos with ticks and single-photo retakes, then **Protect with Face ID and register** (passkey via Mera, encryption in the browser, ciphertext upload, attestation, `register` with starter terms: Advertising and Social, worldwide, 2.00 USDC, 100 renders, 30 days, ask each time). **Public photo:** after registering, the creator picks one of their three photos or takes a new one; it is face-matched against an attested reference photo, then published (or skipped: unlisted, with a silhouette). Resumes from server and chain state; technical details in a collapsed panel |
+| `/onboard` | Three steps under one progress bar. **Sign in:** email creates the embedded wallet (Dynamic), and a one-time gas top-up arrives in the background ("Gas is covered" with Retry appears only if it fails); registered creators go straight to the dashboard. **Verify it's you:** one screen with the consent and **Agree and verify**, which signs it and starts Didit (ID 18+, liveness, selfie-to-ID face match); plain-language results with Try again. **Protect your photos:** three guided photos with ticks and single-photo retakes, then **Protect with Face ID and register** (passkey via Mera, encryption in the browser, ciphertext upload, attestation, `register` with starter terms: Advertising and Social, worldwide, 2.00 USDC, 100 renders, 30 days, ask each time). **Public photo:** after registering, the creator picks one of their three photos or takes a new one; it is face-matched against an attested reference photo, then published (or skipped: unlisted, with a silhouette). Resumes from server and chain state; technical details in a collapsed panel |
 | `/brand/onboard` | Brands, three steps. **Sign in** as above. **Your company:** name, website, work email, logo, intended uses, expected volume; the **domain check** proves the work email (the sign-in email via Dynamic's signed session, or an emailed code with `RESEND_API_KEY`); the server shows **Verified domain** only when that email's domain matches the website, else **Unverified brand** (free email domains always). KYB is a labelled hook, not run. **Agree and fund:** the brand policy, signed by the wallet; USDC balance, address and the Circle faucet |
 | `/market`, `/market/[creator]` | Listed creators (verified, with a public photo) with their trust label, tags and terms. Signed out: photo, name, tags, uses, price and level. A signed-in brand with a completed profile also sees approved sample renders (1024 px, watermarked, short-lived signed URLs, rate limited). Requesting a licence needs a brand profile; creators see the brand's name, logo and badge before approving |
 | `/dashboard` | Creator: terms editor, pause, approve or decline requests (with the brand's badge), release photos per licence, revoke one or all, earnings, and the **Public profile** card: change or remove the photo, style tags, the listing switch, and sample renders (up to 4 preset scenes or a filtered prompt; the photos are released for that one request; each sample is approved or rejected, and can be removed later; 6 a day, paid by Likeness, no escrow). Brand: USDC, deposit, refund, delegation, renders |
@@ -265,6 +265,8 @@ Not built yet:
   that brand.
 - **"Casting calls only" mode:** a creator is never browsable in the marketplace, and only appears to
   brands they choose to answer.
+- **Sponsored gas via EIP-7702 + paymaster:** new wallets get a one-time ETH top-up from a server key
+  today (`/api/drip`); a paymaster would remove even that.
 - **Brand KYB:** business verification through Didit. A hook is in the brand profile (`kyb: "not-run"`),
   and nothing claims it today.
 

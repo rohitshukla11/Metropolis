@@ -2,7 +2,8 @@
 
 /**
  * Creator onboarding in three steps, under one progress bar:
- *   1. Sign in: email through Dynamic; the embedded wallet is created once the code is verified.
+ *   1. Sign in: email through Dynamic; the embedded wallet is created once the code is verified, and
+ *      a gas top-up is sent in the background (nothing is shown unless that fails).
  *   2. Verify it's you: one screen with the consent and "Agree and verify", which signs the consent
  *      with the wallet and starts the Didit session; the server reads Didit's decision.
  *   3. Protect your photos: three guided photos, each matched to the liveness selfie, then "Protect
@@ -63,6 +64,7 @@ type Didit = {
 };
 type Attested = { provider: string; liveness: string; level: string };
 type Facts = {
+  dripTx?: string;
   fingerprint?: string;
   attested?: Attested;
   registerTx?: string;
@@ -95,6 +97,7 @@ export function OnboardFlow() {
   const [registered, setRegistered] = useState<boolean | null>(null);
   const [consented, setConsented] = useState<boolean | null>(null);
   const [didit, setDidit] = useState<Didit | null>(null);
+  const [dripError, setDripError] = useState<string | null>(null);
   const [photoStep, setPhotoStep] = useState<{ photos: Uint8Array[]; set: ReferenceSet; hash?: Hex } | null>(null);
   const [publicPhoto, setPublicPhoto] = useState<string | null>(null);
   useEffect(() => {
@@ -129,6 +132,30 @@ export function OnboardFlow() {
     if (wallet && registered === true && !done) router.replace("/dashboard");
   }, [wallet, registered, done, router]);
 
+
+  // A new, empty wallet gets a gas top-up in the background, once, within the drip's limits.
+  const drip = useCallback(
+    async (address: `0x${string}`) => {
+      setDripError(null);
+      try {
+        if ((await pub.getBalance({ address })) > 0n) return;
+        const r = await fetch("/api/drip", { method: "POST", body: JSON.stringify({ address }) });
+        const j = (await r.json()) as { hash?: Hex; error?: string };
+        if (!r.ok || !j.hash) throw new Error(j.error ?? `top-up failed (${r.status})`);
+        note({ dripTx: j.hash });
+        await pub.waitForTransactionReceipt({ hash: j.hash });
+      } catch (e) {
+        setDripError(e instanceof Error ? e.message : String(e));
+      }
+    },
+    [note],
+  );
+  const dripped = useRef<string | null>(null);
+  useEffect(() => {
+    if (!wallet || wallet.kind === "dev" || registered !== false || dripped.current === wallet.address) return;
+    dripped.current = wallet.address;
+    void drip(wallet.address);
+  }, [wallet, registered, drip]);
 
   const resolving = !!wallet && (registered === null || consented === null || didit === null);
   const step: 1 | 2 | 3 | "done" | null = !wallet ? 1 : resolving || (registered && !done) ? null : done ? "done" : didit?.state === "approved" ? 3 : 2;
@@ -181,6 +208,8 @@ export function OnboardFlow() {
       </section>
 
 
+      {dripError && wallet && <GasCovered error={dripError} onRetry={() => void drip(wallet.address)} />}
+
       <Details summary="Details">
         <dl className="m-0 grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-[10rem_1fr]">
           <dt className="text-grey">Wallet</dt>
@@ -196,6 +225,8 @@ export function OnboardFlow() {
           </dd>
           <dt className="text-grey">Network</dt>
           <dd className="m-0">Arbitrum Sepolia (421614)</dd>
+          <dt className="text-grey">Gas top-up</dt>
+          <dd className="m-0">{facts.dripTx ? <Tx hash={facts.dripTx} /> : dripError ? `failed: ${dripError}` : "—"}</dd>
           <dt className="text-grey">Passkey key fingerprint</dt>
           <dd className="tnum m-0 font-mono text-[13px]">{facts.fingerprint ?? "—"}</dd>
           <dt className="text-grey">Didit session</dt>
@@ -739,5 +770,18 @@ function Done({ wallet, liveness, registeredAt, photo }: { wallet: ActiveWallet;
         </Link>
       </div>
     </div>
+  );
+}
+
+/** Shown only when a new wallet's gas top-up failed: Likeness pays the network fee, so a retry is all it takes. */
+export function GasCovered({ error, onRetry }: { error: string; onRetry: () => void }) {
+  return (
+    <p role="alert" className="m-0 flex flex-wrap items-center gap-3 rounded-[16px] bg-white px-4 py-3 text-[14px]">
+      <span className="font-semibold">Gas is covered.</span>
+      <span className="text-grey">Likeness pays your network fees, but the top-up to your wallet didn&apos;t go through ({error}).</span>
+      <button type="button" onClick={onRetry} className={pillClass("outline", "min-h-11 px-4 text-[14px]")}>
+        Retry
+      </button>
+    </p>
   );
 }

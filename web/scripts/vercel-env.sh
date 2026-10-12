@@ -39,6 +39,7 @@ set_value STORE_DRIVER blob
 # Server signing keys and the C2PA chain, from ../.secrets
 set_file ATTESTER_PRIVATE_KEY ../.secrets/attester.key
 set_file RENDER_AGENT_PRIVATE_KEY ../.secrets/render-agent.key
+set_file DRIP_PRIVATE_KEY ../.secrets/drip.key
 set_file C2PA_CERT_PEM ../.secrets/c2pa/signer.pem
 set_file C2PA_KEY_PEM ../.secrets/c2pa/signer.key
 
@@ -47,7 +48,7 @@ for name in DIDIT_API_KEY GEMINI_API_KEY RPC_URL DYNAMIC_API_KEY DYNAMIC_WEBHOOK
   set_value "$name" "$(local_value "$name")" sensitive
 done
 for name in VERIFICATION_LEVEL DIDIT_WORKFLOW_ID_FREE DIDIT_WORKFLOW_ID_FULL DIDIT_CAPTURE_MATCH_THRESHOLD \
-  GEMINI_IMAGE_MODEL GEMINI_IMAGE_SIZE GEMINI_FILTER_MODEL ENVIO_GRAPHQL_URL; do
+  DRIP_AMOUNT_ETH DRIP_PER_IP_PER_HOUR DRIP_PER_HOUR GEMINI_IMAGE_MODEL GEMINI_IMAGE_SIZE GEMINI_FILTER_MODEL ENVIO_GRAPHQL_URL; do
   set_value "$name" "$(local_value "$name")"
 done
 

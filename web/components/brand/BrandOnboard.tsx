@@ -11,8 +11,8 @@
  */
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
-import { createPublicClient, erc20Abi, formatUnits, http } from "viem";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPublicClient, erc20Abi, formatUnits, http, type Hex } from "viem";
 import { actionMessage } from "@/lib/auth";
 import {
   BADGE_LABEL,
@@ -33,8 +33,8 @@ import { sha256Hex } from "@/lib/crypto/envelope";
 import { dynamicSessionToken, useDynamicState } from "@/app/providers";
 import { Details, pillClass, StatusPill } from "@/components/ds";
 import { IconCheck } from "@/components/ds/icons";
-import { Note, inputClass } from "@/components/ui";
-import { Progress, SignIn } from "@/components/onboard/OnboardFlow";
+import { Note, Tx, inputClass } from "@/components/ui";
+import { GasCovered, Progress, SignIn } from "@/components/onboard/OnboardFlow";
 import { useWallet, type ActiveWallet } from "@/components/wallet/WalletProvider";
 
 const pub = createPublicClient({ chain: appChain, transport: http() });
@@ -51,6 +51,8 @@ export function BrandOnboard() {
   const [brand, setBrand] = useState<Brand | null | undefined>(undefined);
   const [complete, setComplete] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [dripTx, setDripTx] = useState<Hex | null>(null);
+  const [dripError, setDripError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!wallet) return;
@@ -63,6 +65,26 @@ export function BrandOnboard() {
     load().catch(() => setBrand(null));
   }, [load]);
 
+
+  // A gas top-up, once, in the background, for a new empty email wallet (same limits as for creators).
+  const dripped = useRef<string | null>(null);
+  const drip = useCallback(async (address: `0x${string}`) => {
+    setDripError(null);
+    try {
+      if ((await pub.getBalance({ address })) > 0n) return;
+      const r = await fetch("/api/drip", { method: "POST", body: JSON.stringify({ address }) });
+      const j = (await r.json()) as { hash?: Hex; error?: string };
+      if (!r.ok || !j.hash) throw new Error(j.error ?? `top-up failed (${r.status})`);
+      setDripTx(j.hash);
+    } catch (e) {
+      setDripError(e instanceof Error ? e.message : String(e));
+    }
+  }, []);
+  useEffect(() => {
+    if (!wallet || wallet.kind === "dev" || dripped.current === wallet.address) return;
+    dripped.current = wallet.address;
+    void drip(wallet.address);
+  }, [wallet, drip]);
 
   const step = !wallet ? 1 : brand === undefined ? null : !brand || editing ? 2 : 3;
 
@@ -105,10 +127,13 @@ export function BrandOnboard() {
           />
         )}
       </section>
+      {dripError && wallet && <GasCovered error={dripError} onRetry={() => void drip(wallet.address)} />}
       <Details summary="Details">
         <dl className="m-0 grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-[10rem_1fr]">
           <dt className="text-grey">Wallet</dt>
           <dd className="m-0 break-all font-mono text-[13px]">{wallet ? wallet.address : "not signed in"}</dd>
+          <dt className="text-grey">Gas top-up</dt>
+          <dd className="m-0">{dripTx ? <Tx hash={dripTx} /> : dripError ? `failed: ${dripError}` : "—"}</dd>
           <dt className="text-grey">Policy version</dt>
           <dd className="m-0">{BRAND_POLICY_VERSION}</dd>
           <dt className="text-grey">Business verification</dt>
