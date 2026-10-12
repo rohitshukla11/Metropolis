@@ -134,10 +134,10 @@ history from cached RPC log scans; current state always comes from the contracts
 
 ### Deploying
 
-Settings for a deployment on a subdomain of `likeness.site`:
+Production runs on Vercel at `https://likeness.site`, with:
 
-- `NEXT_PUBLIC_RP_ID=likeness.site`, so passkeys work on every subdomain;
-- `NEXT_PUBLIC_APP_URL=https://` plus the deployment's host;
+- `NEXT_PUBLIC_RP_ID=likeness.site` (passkeys are bound to it);
+- `NEXT_PUBLIC_APP_URL=https://likeness.site`;
 - a dedicated Arbitrum Sepolia RPC in `RPC_URL`.
 
 **On Vercel** (the configuration is in [`web/vercel.json`](web/vercel.json)):

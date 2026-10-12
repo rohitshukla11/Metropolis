@@ -4,7 +4,7 @@
 # the files and piped to the Vercel CLI; none is printed.
 #
 #   cd web && npx vercel login && npx vercel link     # once, in your own terminal
-#   sh scripts/vercel-env.sh https://www.likeness.site
+#   sh scripts/vercel-env.sh https://likeness.site
 #
 # Then redeploy without the build cache (NEXT_PUBLIC_* values are compiled into the page).
 set -eu
