@@ -105,13 +105,13 @@ pnpm dev                       # http://localhost:3000
 
 ```sh
 pnpm demo --fork   # local anvil fork of Arbitrum Sepolia: real contracts, Circle's real USDC contract
-pnpm seed          # Arbitrum Sepolia: the render agent, and the test brand wallet (Levis) with gas
+pnpm seed          # Arbitrum Sepolia: the render agent, and the test brand wallet with gas
 ```
 
 On the fork, the demo:
 
 - registers a throwaway creator (attestation provider `dev-unverified`, synthetic drawings for photos);
-- funds the test brand (Levis) with USDC;
+- funds the test brand with USDC;
 - creates a licence, deposits, and releases the key;
 - runs two renders and verifies one file;
 - revokes, shows the next render refused and the file now "licensed when made, since revoked", and
@@ -120,8 +120,8 @@ On the fork, the demo:
 It prints every transaction hash. That test creator exists only on the fork. On Arbitrum Sepolia the
 demo runs in the app with a Didit-verified creator.
 
-**Test brand.** With `DEV_WALLETS=1` in `.env.local`, the header picker can act as the test brand,
-Levis, marked DEV. The choice is per tab, so one tab can be the brand while another uses your own wallet.
+**Test brand.** With `DEV_WALLETS=1` in `.env.local`, the header picker can act as the seeded test
+brand, marked DEV. The choice is per tab, so one tab can be the brand while another uses your own wallet.
 
 **Recording a demo.** The dev server shows no Next.js badge. `NEXT_PUBLIC_HIDE_DEV_OVERLAY=1` in
 `.env.local` also hides its issue toasts, which browser extensions such as wallet add-ons can trigger.
@@ -475,7 +475,7 @@ what is live.
 | Creator verification (Didit: ID 18+, liveness, face match) | `DIDIT_API_KEY`, `VERIFICATION_LEVEL` (`free` or `full`), `DIDIT_WORKFLOW_ID_FREE`, `DIDIT_WORKFLOW_ID_FULL` (optional `DIDIT_WEBHOOK_SECRET`); `full` needs **Didit credit**; `free` needs `pnpm face:models` | "Liveness not configured and ID check not performed"; no creator can be verified |
 | Renders and the LLM prompt filter (Google Gemini) | `GEMINI_API_KEY` (optional: `GEMINI_IMAGE_MODEL`, `GEMINI_FILTER_MODEL`); **billing on the key's Google Cloud project** for the image model | A TEST RENDER, and "LLM filter not configured": local rules only |
 | Envio via HyperSync | `ENVIO_API_TOKEN` in `indexer/.env` | The indexer syncs over RPC, more slowly |
-| Testnet `payRender` in `pnpm demo` | Circle testnet USDC in the demo funder (`0x68343Aa0…10f2`) or the test brand (Levis) | `pnpm demo --fork` |
+| Testnet `payRender` in `pnpm demo` | Circle testnet USDC in the demo funder (`0x68343Aa0…10f2`) or the test brand | `pnpm demo --fork` |
 
 ## Licence
 

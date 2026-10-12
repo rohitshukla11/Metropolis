@@ -187,6 +187,7 @@ export async function generate(input: { licenceId: bigint; licensee: Address; pr
     const sent = await sendDelegatedPayRender(input.licensee, { licenceId: input.licenceId, assetHash, agent: agent.address, deadline, agentSig });
     Object.assign(record, { state: "paid", tx: sent.hash, gasUsed: sent.gasUsed.toString(), confirmMs: sent.confirmMs, block: sent.blockNumber.toString(), paidBy: sent.provider });
     console.log(JSON.stringify({ service: "tx", hash: sent.hash, fn: "payRender (delegated)", from: input.licensee, ms: sent.confirmMs, gasUsed: sent.gasUsed.toString() }));
+    await dbPut("txlog", sent.hash, { hash: sent.hash, fn: "payRender (delegated)", from: input.licensee.toLowerCase(), ms: sent.confirmMs, gasUsed: sent.gasUsed.toString(), block: sent.blockNumber.toString(), at: Date.now() });
     await dbPut("renders", assetHash, record);
     return { record: publicRecord(record, true), attempts: out.attempts };
   });
