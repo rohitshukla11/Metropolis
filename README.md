@@ -2,12 +2,9 @@
 
 **Licence your face to AI, on your terms, and pull it back any time.**
 
-**Live:** [www.likeness.site](https://www.likeness.site), running on Vercel against the Monad testnet
-contracts below.
-
 **On X:** [the Likeness post](https://x.com/RohitOnChain/status/2108857995010728445?s=20).
 
-Likeness is a likeness-licensing protocol on Monad, with a reference app on top:
+Likeness is a likeness-licensing protocol on Arbitrum, with a reference app on top:
 
 - **Creators** prove they are a real, live adult, capture an encrypted reference set of their face,
   publish terms, and license their likeness.
@@ -34,10 +31,10 @@ flowchart LR
     R[Renderer<br/>Gemini image model, SynthID<br/>or TEST RENDER]
     M[C2PA manifest<br/>licence + receipt lookup]
     A[Render agent<br/>EIP-712 Render signature]
-    D[Delegation guard<br/>payRender only · 10143 · total cap]
+    D[Delegation guard<br/>payRender only · 421614 · total cap]
     VS[Verifier]
   end
-  subgraph Monad["Monad testnet (10143)"]
+  subgraph Arbitrum["Arbitrum Sepolia (421614)"]
     CR[CreatorRegistry]
     LR[LicenseRegistry]
     LE[LicenseEscrow]
@@ -100,15 +97,15 @@ cd web
 cp .env.example .env.local     # local defaults; add credentials as they arrive
 pnpm install
 pnpm c2pa:testcert             # once: a TEST C2PA signing chain in ../.secrets/c2pa
-pnpm test                      # crypto, render pipeline, and the licence lifecycle on a Monad testnet fork
+pnpm test                      # crypto, render pipeline, and the licence lifecycle on an Arbitrum Sepolia fork
 pnpm dev                       # http://localhost:3000
 ```
 
 **The whole protocol in one command:**
 
 ```sh
-pnpm demo --fork   # local anvil fork of Monad testnet: real contracts, Circle's real USDC contract
-pnpm seed          # Monad testnet: the render agent, and the test brand wallet (Levis) with gas
+pnpm demo --fork   # local anvil fork of Arbitrum Sepolia: real contracts, Circle's real USDC contract
+pnpm seed          # Arbitrum Sepolia: the render agent, and the test brand wallet (Levis) with gas
 ```
 
 On the fork, the demo:
@@ -120,8 +117,8 @@ On the fork, the demo:
 - revokes, shows the next render refused and the file now "licensed when made, since revoked", and
   refunds.
 
-It prints every transaction hash. That test creator exists only on the fork. On Monad testnet the demo
-runs in the app with a Didit-verified creator.
+It prints every transaction hash. That test creator exists only on the fork. On Arbitrum Sepolia the
+demo runs in the app with a Didit-verified creator.
 
 **Test brand.** With `DEV_WALLETS=1` in `.env.local`, the header picker can act as the test brand,
 Levis, marked DEV. The choice is per tab, so one tab can be the brand while another uses your own wallet.
@@ -131,18 +128,17 @@ Levis, marked DEV. The choice is per tab, so one tab can be the brand while anot
 It works in development only; remove it afterwards, because real errors are hidden too.
 
 **Indexer.** [`indexer/`](indexer) is an Envio HyperIndex for all four contracts.
-`cd indexer && pnpm install && pnpm local` runs it against Monad testnet with an embedded Postgres; no
+`cd indexer && pnpm install && pnpm local` runs it against Arbitrum Sepolia with an embedded Postgres; no
 Docker is needed. Then set `ENVIO_PG_URL` in `web/.env.local`. Without an indexer, the app reads
 history from cached RPC log scans; current state always comes from the contracts.
 
 ### Deploying
 
-Production runs on Vercel at `www.likeness.site`, with `likeness.site` redirecting to it. Its settings
-in the steps below are:
+Settings for a deployment on a subdomain of `likeness.site`:
 
-- `NEXT_PUBLIC_RP_ID=likeness.site`, which covers both hosts;
-- `NEXT_PUBLIC_APP_URL=https://www.likeness.site`;
-- a dedicated Monad testnet RPC in `MONAD_RPC_URL`.
+- `NEXT_PUBLIC_RP_ID=likeness.site`, so passkeys work on every subdomain;
+- `NEXT_PUBLIC_APP_URL=https://` plus the deployment's host;
+- a dedicated Arbitrum Sepolia RPC in `RPC_URL`.
 
 **On Vercel** (the configuration is in [`web/vercel.json`](web/vercel.json)):
 
@@ -158,15 +154,15 @@ in the steps below are:
 4. **Settings → Environment Variables** (Production). Set these before the first deploy, because the
    public ones are compiled into the page:
    - `STORE_DRIVER=blob`;
-   - `MONAD_RPC_URL`: a dedicated Monad testnet RPC endpoint with its own key, for the server. The
-     public RPC allows 25 requests a second per IP, and Vercel's outgoing IPs are shared, so the
-     server's history scan gets rate limited. Browsers keep using `NEXT_PUBLIC_MONAD_RPC_URL`;
+   - `RPC_URL`: a dedicated Arbitrum Sepolia RPC endpoint with its own key, for the server. The
+     public RPC has no rate-limit guarantee, and Vercel's outgoing IPs are shared. Browsers use
+     `NEXT_PUBLIC_RPC_URL` (default: the public endpoint);
    - `NEXT_PUBLIC_RP_ID`: the domain, with no scheme. For a site on `www.`, use the parent domain
      (`likeness.site`) so passkeys work on both;
    - `NEXT_PUBLIC_APP_URL`: `https://` plus the domain;
    - `NEXT_PUBLIC_DYNAMIC_ENV_ID`;
    - the secrets, as values. Every `*_FILE` secret has a value form, read when the file is absent:
-     - `ATTESTER_PRIVATE_KEY`, `DRIP_PRIVATE_KEY`, `RENDER_AGENT_PRIVATE_KEY`;
+     - `ATTESTER_PRIVATE_KEY`, `RENDER_AGENT_PRIVATE_KEY`;
      - `C2PA_CERT_PEM`, `C2PA_KEY_PEM` (paste the PEM; `\n` escapes also work);
      - `DIDIT_API_KEY`, `VERIFICATION_LEVEL`, `DIDIT_WORKFLOW_ID_FREE`, `DIDIT_WORKFLOW_ID_FULL`;
      - `GEMINI_API_KEY`, `GEMINI_IMAGE_MODEL`, `GEMINI_IMAGE_SIZE`, `GEMINI_FILTER_MODEL`;
@@ -217,7 +213,7 @@ face model stays on the volume and nothing lives across instances. Set the same 
 | Path | What it does |
 |---|---|
 | `/` | Landing: how a licence runs, measured numbers, example creator cards (sample images, labelled as examples; never a real creator's face), and the calls to become a creator or license a face |
-| `/onboard` | Three steps under one progress bar. **Sign in:** email creates the embedded wallet (Dynamic); MON for gas arrives in the background, with a Retry line only if it fails; registered creators go straight to the dashboard. **Verify it's you:** one screen with the consent and **Agree and verify**, which signs it and starts Didit (ID 18+, liveness, selfie-to-ID face match); plain-language results with Try again. **Protect your photos:** three guided photos with ticks and single-photo retakes, then **Protect with Face ID and register** (passkey via Mera, encryption in the browser, ciphertext upload, attestation, `register` with starter terms: Advertising and Social, worldwide, 2.00 USDC, 100 renders, 30 days, ask each time). **Public photo:** after registering, the creator picks one of their three photos or takes a new one; it is face-matched against an attested reference photo, then published (or skipped: unlisted, with a silhouette). Resumes from server and chain state; technical details in a collapsed panel |
+| `/onboard` | Three steps under one progress bar. **Sign in:** email creates the embedded wallet (Dynamic); registered creators go straight to the dashboard. **Verify it's you:** one screen with the consent and **Agree and verify**, which signs it and starts Didit (ID 18+, liveness, selfie-to-ID face match); plain-language results with Try again. **Protect your photos:** three guided photos with ticks and single-photo retakes, then **Protect with Face ID and register** (passkey via Mera, encryption in the browser, ciphertext upload, attestation, `register` with starter terms: Advertising and Social, worldwide, 2.00 USDC, 100 renders, 30 days, ask each time). **Public photo:** after registering, the creator picks one of their three photos or takes a new one; it is face-matched against an attested reference photo, then published (or skipped: unlisted, with a silhouette). Resumes from server and chain state; technical details in a collapsed panel |
 | `/brand/onboard` | Brands, three steps. **Sign in** as above. **Your company:** name, website, work email, logo, intended uses, expected volume; the **domain check** proves the work email (the sign-in email via Dynamic's signed session, or an emailed code with `RESEND_API_KEY`); the server shows **Verified domain** only when that email's domain matches the website, else **Unverified brand** (free email domains always). KYB is a labelled hook, not run. **Agree and fund:** the brand policy, signed by the wallet; USDC balance, address and the Circle faucet |
 | `/market`, `/market/[creator]` | Listed creators (verified, with a public photo) with their trust label, tags and terms. Signed out: photo, name, tags, uses, price and level. A signed-in brand with a completed profile also sees approved sample renders (1024 px, watermarked, short-lived signed URLs, rate limited). Requesting a licence needs a brand profile; creators see the brand's name, logo and badge before approving |
 | `/dashboard` | Creator: terms editor, pause, approve or decline requests (with the brand's badge), release photos per licence, revoke one or all, earnings, and the **Public profile** card: change or remove the photo, style tags, the listing switch, and sample renders (up to 4 preset scenes or a filtered prompt; the photos are released for that one request; each sample is approved or rejected, and can be removed later; 6 a day, paid by Likeness, no escrow). Brand: USDC, deposit, refund, delegation, renders |
@@ -232,15 +228,15 @@ API routes live under [`web/app/api`](web/app/api). The server modules they call
 ### Tests
 
 ```sh
-cd contracts && forge test        # unit, fuzz, invariant; with MONAD_RPC_URL set, also the Monad testnet fork suite
-cd web && pnpm test               # 29 tests
+cd contracts && forge test        # unit, fuzz, invariant; with RPC_URL set, also the Arbitrum Sepolia fork suite
+cd web && pnpm test               # crypto, pipeline, profiles, and the fork suites once contracts are deployed
 cd indexer && pnpm test           # Envio handlers on the in-memory test indexer
 ```
 
 - **Contracts.** Every revert path. Fuzz tests check that banned bits are never stored or licensed,
   and that each render conserves funds. The invariant suite (256 runs × 64 calls, 0 reverts) checks
   conservation of USDC, renders within cap, renders paid for, and refunds reaching only licensees.
-- **Licence lifecycle on an anvil fork of Monad testnet**
+- **Licence lifecycle on an anvil fork of Arbitrum Sepolia**
   ([`lifecycle.fork.test.ts`](web/lib/server/lifecycle.fork.test.ts)). This uses the deployed contracts,
   Circle's real USDC contract and the app's own server modules, with no mocks. It covers:
   - registering the dev-unverified creator;
@@ -272,68 +268,10 @@ Not built yet:
 - **Brand KYB:** business verification through Didit. A hook is in the brand profile (`kyb: "not-run"`),
   and nothing claims it today.
 
-## Deployments (Monad testnet, chain 10143)
+## Deployments (Arbitrum Sepolia, chain 421614)
 
-Deployed 2026-10-10 (UTC) from `0x68343Aa0598b7FCAA102769D172e59cdDfae10f2`, starting at block
-69,802,475. All four contracts are verified on Sourcify (MonadVision) as exact matches.
-Machine-readable: [`deployments/monad-testnet.json`](deployments/monad-testnet.json).
-
-This deployment replaces the earlier ones. Creators, licences, escrow balances and receipts on the old
-contracts are not carried over: no creator is registered on these contracts yet.
-
-| Contract | Address | Deploy tx |
-|---|---|---|
-| CreatorRegistry | [`0xc0eadb706D175e317c8D89cD250781fC3d14008B`](https://testnet.monadvision.com/address/0xc0eadb706D175e317c8D89cD250781fC3d14008B) | [`0x8cac5aca…`](https://testnet.monadvision.com/tx/0x8cac5aca0d857b6f7a27ec09192c8b3888b26c0e1136abc0e20d87af41f9488e) |
-| LicenseRegistry | [`0x38c8EcA2782fB64C23daB9B3432E668F81Fbacc9`](https://testnet.monadvision.com/address/0x38c8EcA2782fB64C23daB9B3432E668F81Fbacc9) | [`0x73fde51c…`](https://testnet.monadvision.com/tx/0x73fde51caa9f39d94f749786b330a183b217021739396cb2692d4cadb1c39eaf) |
-| ReceiptAnchor | [`0x272b5Bdf04564dA897a66aE84E18c822876d72Fe`](https://testnet.monadvision.com/address/0x272b5Bdf04564dA897a66aE84E18c822876d72Fe) | [`0x9ca3face…`](https://testnet.monadvision.com/tx/0x9ca3facefbf70cd26b05ac89c922cea3df9ba0b926ff1790fcfbf25aff49ff32) |
-| LicenseEscrow | [`0xf7659B8CFA2A484aE30e638c2490131Bc568dA0A`](https://testnet.monadvision.com/address/0xf7659B8CFA2A484aE30e638c2490131Bc568dA0A) | [`0xa11e3ba0…`](https://testnet.monadvision.com/tx/0xa11e3ba01d4ad329e81cee56093311ca0006af390f089a52e9611042ea585439) |
-| USDC (Circle) | [`0x534b2f3A21130d7a60830c2Df862319e593943A3`](https://testnet.monadvision.com/address/0x534b2f3A21130d7a60830c2Df862319e593943A3) | [Circle docs](https://developers.circle.com/stablecoins/usdc-contract-addresses) |
-
-Wiring transactions:
-
-- `LicenseRegistry.setEscrow`: [`0x8ae5bf06…`](https://testnet.monadvision.com/tx/0x8ae5bf067e480cb27d35919210aa720bca2c048b05868b57e837c0e6751412bb)
-- `ReceiptAnchor.setEscrow`: [`0x8748e893…`](https://testnet.monadvision.com/tx/0x8748e8933ef3b643b1a9ba7609824c9494afb590b5f9f88dfdf548a8e2910550)
-- `LicenseEscrow.setRenderAgent` (render-agent key `0x87CA75118FD0C7EF3090c82E8df4CF4b56cD03cA`): [`0x51c02ed8…`](https://testnet.monadvision.com/tx/0x51c02ed8adf3587c2af3cdb07cc62470d13f1aed9c2604351521dd4f06bca2a7)
-
-Roles:
-
-- **Attester:** `0x8d53e13407890e18022bfAa413193ba4C6DCc1a5`.
-- **Render agent:** `0x87CA75118FD0C7EF3090c82E8df4CF4b56cD03cA`, the render service's local key
-  (`RENDER_AGENT_KEY_FILE`). It moves to a Dynamic server wallet with `pnpm agent:dynamic` once
-  `DYNAMIC_API_KEY` is set.
-- **Treasury and owner:** the deployer.
-- **Fee:** 10%.
-
-**Test brand.** Levis (`0x41083F240E968C4A37A39404d40f1c68210e5B9f`), a DEV wallet for testing
-brand flows, holding Circle testnet USDC. The name is a test label only.
-
-An earlier unverified test creator (`0xB6f4…0e21`, provider `dev-unverified`) was suspended by the
-owner on 2026-10-10 ([`0xc2453bfb…`](https://testnet.monadvision.com/tx/0xc2453bfb78a2d217d46ad148e85ec9691bda8f62983dbb560aa10a5c02803916)).
-That revoked its only licence (#1), and it can never license again. Registrations cannot be deleted
-on chain, so it is still recorded there, but the marketplace lists only Didit-verified creators.
-
-## Why Monad
-
-Pay-per-render means **one on-chain transaction per generated image**: usage, payment and receipt
-together, sent before the file reaches the brand.
-
-- **Gas, measured.** `payRender` used **368,502 gas** for a licence's first render (cold storage) and
-  **300,502 gas** for later ones. These are from `pnpm demo --fork`: the deployed bytecode and state on
-  an anvil fork of Monad testnet, with Circle's USDC contract. Monad charges the gas **limit**, not gas
-  used ([gas pricing](https://docs.monad.xyz/developer-essentials/gas-pricing.md)), so the service sends
-  the estimate + 15%. At the 102 gwei testnet gas price measured on 2026-10-06, that is about
-  **0.043 MON** for a first render and **0.035 MON** after. That is small next to a per-render price.
-- **Confirmation, measured on Monad testnet** (send to receipt through the public RPC, polling):
-  - `register`: 853 ms;
-  - `setRenderAgent`: 557 ms;
-  - licence `request` from the browser: 582 ms;
-  - MON transfers: 945 ms and 1,450 ms.
-
-  Monad documents 300 ms block frequency and 600 ms finality
-  ([docs](https://docs.monad.xyz/introduction/monad-for-users.md)), so the receipt is final before the
-  file is delivered, and a revocation binds the next render.
-- **Not yet measured on testnet:** `payRender`'s own confirmation time. It needs Circle testnet USDC
-  in the demo funder (see [credentials](#credentials)); `pnpm demo` prints it.
+Not deployed yet. Addresses, transactions and measured confirmation times go here and in
+[`deployments/arbitrum-sepolia.json`](deployments).
 
 ## Threat model and honest limits
 
@@ -464,13 +402,12 @@ What it does not do, plainly:
   - The payRender-only and total-cap rules are therefore enforced by our server guard and by the
     contract, not by Dynamic.
   - Delegated access is sandbox-only without a Dynamic Enterprise plan.
-  - Whether Dynamic's policy simulation covers chain 10143 is untested until credentials arrive.
 - **Central attester.** One platform key attests creators. It can be rotated (`setAttester`), but it is
   trusted.
 - **The fork test creator** (`pnpm demo --fork` and the fork tests only).
   - Its attestation carries `adult: true`, because `CreatorRegistry` only registers adults, but both
     provider fields say `dev-unverified`.
-  - Every reader labels it unverified, and it never touches Monad testnet.
+  - Every reader labels it unverified, and it never touches the public chain.
 - **Off-chain records** (pending requests, briefs, delegation grants, render files) are local JSON and
   files under `web/.data`, or Vercel Blob. They are not replicated.
 

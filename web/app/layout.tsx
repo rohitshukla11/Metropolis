@@ -9,7 +9,7 @@ const body = Poppins({ subsets: ["latin"], weight: ["400", "500", "600", "700"],
 
 export const metadata: Metadata = {
   title: { default: "Likeness: license your face to AI", template: "%s · Likeness" },
-  description: "Licence your face to AI, on your terms, and pull it back any time. A likeness-licensing protocol on Monad.",
+  description: "Licence your face to AI, on your terms, and pull it back any time. A likeness-licensing protocol on Arbitrum.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

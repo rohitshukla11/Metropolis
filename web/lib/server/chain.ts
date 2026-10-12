@@ -1,13 +1,13 @@
 import "server-only";
 /**
  * Server-side chain access. The RPC is read at call time, so a test or the local demo can point the
- * whole server at an anvil fork of Monad testnet (MONAD_RPC_URL) without touching the browser config.
+ * whole server at an anvil fork of Arbitrum Sepolia (RPC_URL) without touching the browser config.
  */
 import { createPublicClient, defineChain, http, type PublicClient } from "viem";
-import { monadTestnet } from "@/lib/chain";
+import { appChain } from "@/lib/chain";
 
 export function rpcUrl(): string {
-  return process.env.MONAD_RPC_URL || process.env.NEXT_PUBLIC_MONAD_RPC_URL || "https://testnet-rpc.monad.xyz";
+  return process.env.RPC_URL || process.env.NEXT_PUBLIC_RPC_URL || appChain.rpcUrls.default.http[0];
 }
 
 /** True when the server is pointed at a local fork rather than the public testnet. */
@@ -16,7 +16,7 @@ export function isLocalFork(): boolean {
 }
 
 export function serverChain() {
-  return defineChain({ ...monadTestnet, rpcUrls: { default: { http: [rpcUrl()] } } });
+  return defineChain({ ...appChain, rpcUrls: { default: { http: [rpcUrl()] } } });
 }
 
 const clients = new Map<string, PublicClient>();
@@ -25,7 +25,7 @@ export function pub(): PublicClient {
   let c = clients.get(url);
   if (!c) {
     // Contract reads issued together go out as one Multicall3 call, and retries back off: the public
-    // Monad RPC allows about 15 requests a second.
+    // RPC has no rate-limit guarantee.
     c = createPublicClient({
       chain: serverChain(),
       batch: { multicall: { wait: 16 } },
@@ -36,7 +36,7 @@ export function pub(): PublicClient {
   return c;
 }
 
-/** Monad charges the gas limit, not gas used: estimate, then add a small margin. */
+/** Estimate gas, then add a small margin so a slightly busier block doesn't make the transaction fail. */
 export const withMargin = (gas: bigint) => (gas * 115n) / 100n;
 
 /**

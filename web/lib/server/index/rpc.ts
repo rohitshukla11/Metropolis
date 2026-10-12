@@ -1,7 +1,7 @@
 import "server-only";
 /**
  * The RPC fallback for the indexer: scans the four contracts' logs from the deployment block,
- * 100 blocks per eth_getLogs call (the public Monad testnet RPC's limit), and caches the decoded
+ * 50,000 blocks per eth_getLogs call (Arbitrum makes about four blocks a second), and caches the decoded
  * rows plus a cursor in STORE_DIR/../index-<chain>.json so later reads only fetch new blocks.
  * Current state (status, terms, balances) is always read from the contracts, never from this cache.
  */
@@ -16,9 +16,10 @@ import { pub, rpcUrl, singleton } from "../chain";
 import { fileGet, filePut, localDir } from "../files";
 import { emptyHistory, type History } from "./types";
 
-// Blocks per eth_getLogs (the public Monad RPC allows 100) and requests in flight. On Vercel the
+// Blocks per eth_getLogs (the public Arbitrum Sepolia RPC answered 500,000-block ranges for these
+// contracts in testing) and requests in flight. On Vercel the
 // outgoing IP is shared with other apps, so the public RPC's per-IP limit is hit sooner: ask less at once.
-const chunk = () => BigInt(process.env.INDEX_LOG_CHUNK ?? 100);
+const chunk = () => BigInt(process.env.INDEX_LOG_CHUNK ?? 50_000);
 const concurrency = () => Number(process.env.INDEX_SCAN_CONCURRENCY ?? (process.env.VERCEL ? 2 : 8));
 const abi = [...CreatorRegistryAbi, ...LicenseRegistryAbi, ...LicenseEscrowAbi];
 
@@ -173,7 +174,7 @@ async function scan(h: History, file: string): Promise<History> {
   if (to < from) return h;
   logs.sort((x, y) => Number(x.blockNumber! - y.blockNumber!) || Number(x.logIndex! - y.logIndex!));
 
-  // Monad's RPC returns blockTimestamp on each log; anything else falls back to the block header.
+  // Some RPCs return blockTimestamp on each log; otherwise it comes from the block header.
   const times = new Map<bigint, number>();
   for (const l of logs) {
     const ts = (l as Log & { blockTimestamp?: Hex | bigint }).blockTimestamp;

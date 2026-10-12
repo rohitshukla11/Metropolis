@@ -34,5 +34,6 @@ contracts/broadcast/*/*/run-[0-9]*.json
 # live demo outputs (rendered images of a real creator): never committed
 demo-renders/
 
-# project notes and screenshots: kept locally, not in the repository
-docs/
+# project notes and screenshots: kept locally, not in the repository (integration docs are)
+docs/*
+!docs/integrations/

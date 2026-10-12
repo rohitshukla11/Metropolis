@@ -1,5 +1,5 @@
 /**
- * DEV/TEST ONLY: a local anvil fork of Monad testnet, with the real deployed contracts and Circle's
+ * DEV/TEST ONLY: a local anvil fork of Arbitrum Sepolia, with the real deployed contracts and Circle's
  * real USDC contract. The protocol owner is impersonated to point the attester and render agent at
  * throwaway test keys, and USDC balances are written straight into the token's storage. Nothing here
  * touches the public chain.
@@ -23,7 +23,7 @@ import {
 import { privateKeyToAccount } from "viem/accounts";
 import { CreatorRegistryAbi } from "@/lib/abi/CreatorRegistry";
 import { LicenseEscrowAbi } from "@/lib/abi/LicenseEscrow";
-import { monadTestnet, USDC } from "@/lib/chain";
+import { appChain, USDC } from "@/lib/chain";
 import { deployment } from "@/lib/deployment";
 
 export const anvilBin = process.env.ANVIL_BIN ?? `${homedir()}/.foundry/bin/anvil`;
@@ -38,10 +38,10 @@ export type Fork = {
   stop(): void;
 };
 
-export async function startFork(port: number, upstream = process.env.FORK_UPSTREAM_RPC ?? "https://testnet-rpc.monad.xyz"): Promise<Fork> {
+export async function startFork(port: number, upstream = process.env.FORK_UPSTREAM_RPC ?? "https://sepolia-rollup.arbitrum.io/rpc"): Promise<Fork> {
   const proc: ChildProcess = spawn(anvilBin, ["--fork-url", upstream, "--port", String(port), "--silent", "--no-rate-limit"], { stdio: "ignore" });
   const url = `http://127.0.0.1:${port}`;
-  const chain = defineChain({ ...monadTestnet, rpcUrls: { default: { http: [url] } } });
+  const chain = defineChain({ ...appChain, rpcUrls: { default: { http: [url] } } });
   const pub = createPublicClient({ chain, transport: http(url) });
   const test = createTestClient({ chain, transport: http(url), mode: "anvil" });
   for (let i = 0; i < 150; i++) {

@@ -11,8 +11,8 @@
  */
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { createPublicClient, erc20Abi, formatEther, formatUnits, http, type Hex } from "viem";
+import { useCallback, useEffect, useState } from "react";
+import { createPublicClient, erc20Abi, formatUnits, http } from "viem";
 import { actionMessage } from "@/lib/auth";
 import {
   BADGE_LABEL,
@@ -27,17 +27,17 @@ import {
   emailMatchesWebsite,
   websiteDomain,
 } from "@/lib/brand-policy";
-import { explorer, monadTestnet, USDC } from "@/lib/chain";
+import { explorer, appChain, USDC } from "@/lib/chain";
 import { api, reason } from "@/lib/client/tx";
 import { sha256Hex } from "@/lib/crypto/envelope";
 import { dynamicSessionToken, useDynamicState } from "@/app/providers";
 import { Details, pillClass, StatusPill } from "@/components/ds";
 import { IconCheck } from "@/components/ds/icons";
-import { Note, Tx, inputClass } from "@/components/ui";
+import { Note, inputClass } from "@/components/ui";
 import { Progress, SignIn } from "@/components/onboard/OnboardFlow";
 import { useWallet, type ActiveWallet } from "@/components/wallet/WalletProvider";
 
-const pub = createPublicClient({ chain: monadTestnet, transport: http() });
+const pub = createPublicClient({ chain: appChain, transport: http() });
 const STEPS = ["Sign in", "Your company", "Agree and fund"] as const;
 
 type Brand = { name: string; website: string; workEmailDomain: string | null; badge: "verified-domain" | "unverified"; uses: string[]; monthlyRenders: string; logo: string | null; policySigned: boolean };
@@ -51,8 +51,6 @@ export function BrandOnboard() {
   const [brand, setBrand] = useState<Brand | null | undefined>(undefined);
   const [complete, setComplete] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [dripTx, setDripTx] = useState<Hex | null>(null);
-  const [dripError, setDripError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!wallet) return;
@@ -65,25 +63,6 @@ export function BrandOnboard() {
     load().catch(() => setBrand(null));
   }, [load]);
 
-  // MON for gas, once, in the background, for a new empty email wallet (same limits as for creators).
-  const dripped = useRef<string | null>(null);
-  const drip = useCallback(async (address: `0x${string}`) => {
-    setDripError(null);
-    try {
-      if ((await pub.getBalance({ address })) > 0n) return;
-      const r = await fetch("/api/drip", { method: "POST", body: JSON.stringify({ address }) });
-      const j = (await r.json()) as { hash?: Hex; error?: string };
-      if (!r.ok || !j.hash) throw new Error(j.error ?? `drip failed (${r.status})`);
-      setDripTx(j.hash);
-    } catch (e) {
-      setDripError(e instanceof Error ? e.message : String(e));
-    }
-  }, []);
-  useEffect(() => {
-    if (!wallet || wallet.kind === "dev" || dripped.current === wallet.address) return;
-    dripped.current = wallet.address;
-    void drip(wallet.address);
-  }, [wallet, drip]);
 
   const step = !wallet ? 1 : brand === undefined ? null : !brand || editing ? 2 : 3;
 
@@ -126,20 +105,10 @@ export function BrandOnboard() {
           />
         )}
       </section>
-      {dripError && wallet && (
-        <p role="alert" className="m-0 flex flex-wrap items-center gap-3 text-[15px] text-bad">
-          We couldn&apos;t send your wallet gas ({dripError}).
-          <button type="button" onClick={() => void drip(wallet.address)} className={pillClass("outline", "min-h-11 px-4 text-[14px]")}>
-            Retry
-          </button>
-        </p>
-      )}
       <Details summary="Details">
         <dl className="m-0 grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-[10rem_1fr]">
           <dt className="text-grey">Wallet</dt>
           <dd className="m-0 break-all font-mono text-[13px]">{wallet ? wallet.address : "not signed in"}</dd>
-          <dt className="text-grey">Gas drip</dt>
-          <dd className="m-0">{dripTx ? <Tx hash={dripTx} /> : dripError ? `failed: ${dripError}` : "—"}</dd>
           <dt className="text-grey">Policy version</dt>
           <dd className="m-0">{BRAND_POLICY_VERSION}</dd>
           <dt className="text-grey">Business verification</dt>
@@ -403,16 +372,10 @@ function AgreeAndFund({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [usdc, setUsdc] = useState<bigint | null>(null);
-  const [mon, setMon] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   const refresh = useCallback(async () => {
-    const [u, m] = await Promise.all([
-      pub.readContract({ address: USDC, abi: erc20Abi, functionName: "balanceOf", args: [wallet.address] }),
-      pub.getBalance({ address: wallet.address }),
-    ]);
-    setUsdc(u);
-    setMon(formatEther(m));
+    setUsdc(await pub.readContract({ address: USDC, abi: erc20Abi, functionName: "balanceOf", args: [wallet.address] }));
   }, [wallet.address]);
   useEffect(() => {
     refresh().catch(() => {});
@@ -483,13 +446,11 @@ function AgreeAndFund({
         <dl className="m-0 grid grid-cols-1 gap-x-4 gap-y-2 text-[15px] sm:grid-cols-[8rem_1fr]">
           <dt className="text-grey">USDC</dt>
           <dd className="tnum m-0 text-[20px] font-bold">{usdc === null ? "…" : formatUnits(usdc, 6)}</dd>
-          <dt className="text-grey">MON (gas)</dt>
-          <dd className="tnum m-0">{mon ?? "…"}</dd>
           <dt className="text-grey">Your address</dt>
           <dd className="m-0 flex flex-wrap items-center gap-2">
             <a href={explorer.address(wallet.address)} target="_blank" rel="noreferrer" className="break-all font-mono text-[13px]">
               {wallet.address}
-              <span className="sr-only"> (opens MonadVision)</span>
+              <span className="sr-only"> (opens Arbiscan)</span>
             </a>
             <button
               type="button"
@@ -507,7 +468,7 @@ function AgreeAndFund({
         <a href="https://faucet.circle.com/" target="_blank" rel="noreferrer" className={pillClass("lime", "self-start")}>
           Get test USDC<span className="sr-only"> (opens faucet.circle.com)</span>
         </a>
-        <p className="m-0 text-[13px] text-grey">On the faucet, choose the network &quot;Monad Testnet&quot; (it opens on another one), paste your address, and request USDC. The balance above updates by itself.</p>
+        <p className="m-0 text-[13px] text-grey">On the faucet, choose the network &quot;Arbitrum Sepolia&quot;, paste your address, and request USDC. The balance above updates by itself.</p>
       </section>
 
       <div className="flex flex-wrap gap-3">

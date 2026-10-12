@@ -31,7 +31,7 @@ set_file() { # name file
 set_value NEXT_PUBLIC_RP_ID "$RP_ID"
 set_value NEXT_PUBLIC_APP_URL "https://$HOST"
 set_value NEXT_PUBLIC_DYNAMIC_ENV_ID "$(local_value NEXT_PUBLIC_DYNAMIC_ENV_ID)"
-set_value NEXT_PUBLIC_MONAD_RPC_URL "$(local_value NEXT_PUBLIC_MONAD_RPC_URL)"
+set_value NEXT_PUBLIC_RPC_URL "$(local_value NEXT_PUBLIC_RPC_URL)"
 
 # Storage on Vercel: private Blob (connect a Blob store to the project for BLOB_READ_WRITE_TOKEN)
 set_value STORE_DRIVER blob
@@ -39,16 +39,15 @@ set_value STORE_DRIVER blob
 # Server signing keys and the C2PA chain, from ../.secrets
 set_file ATTESTER_PRIVATE_KEY ../.secrets/attester.key
 set_file RENDER_AGENT_PRIVATE_KEY ../.secrets/render-agent.key
-set_file DRIP_PRIVATE_KEY ../.secrets/drip.key
 set_file C2PA_CERT_PEM ../.secrets/c2pa/signer.pem
 set_file C2PA_KEY_PEM ../.secrets/c2pa/signer.key
 
 # Integrations and settings, from .env.local
-for name in DIDIT_API_KEY GEMINI_API_KEY MONAD_RPC_URL DYNAMIC_API_KEY DYNAMIC_WEBHOOK_SECRET DIDIT_WEBHOOK_SECRET; do
+for name in DIDIT_API_KEY GEMINI_API_KEY RPC_URL DYNAMIC_API_KEY DYNAMIC_WEBHOOK_SECRET DIDIT_WEBHOOK_SECRET; do
   set_value "$name" "$(local_value "$name")" sensitive
 done
 for name in VERIFICATION_LEVEL DIDIT_WORKFLOW_ID_FREE DIDIT_WORKFLOW_ID_FULL DIDIT_CAPTURE_MATCH_THRESHOLD \
-  DRIP_AMOUNT_MON DRIP_PER_IP_PER_HOUR DRIP_PER_HOUR GEMINI_IMAGE_MODEL GEMINI_IMAGE_SIZE GEMINI_FILTER_MODEL ENVIO_GRAPHQL_URL; do
+  GEMINI_IMAGE_MODEL GEMINI_IMAGE_SIZE GEMINI_FILTER_MODEL ENVIO_GRAPHQL_URL; do
   set_value "$name" "$(local_value "$name")"
 done
 

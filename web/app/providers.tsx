@@ -2,9 +2,9 @@
 
 /**
  * Dynamic JS SDK (https://www.dynamic.xyz/docs/javascript/reference/react-quickstart.md):
- * one client, the WaaS EVM extension for embedded wallets, and Monad testnet as the only network.
- * Monad is not in Dynamic's default list, so it is supplied through `transformers.networksData`
- * (documented on DynamicClientConfig in @dynamic-labs-sdk/client 1.38.0).
+ * one client, the WaaS EVM extension for embedded wallets, and Arbitrum Sepolia as the only network.
+ * The network list is pinned to the app's chain through `transformers.networksData` (documented on
+ * DynamicClientConfig in @dynamic-labs-sdk/client 1.38.0), so wallets never switch to another chain.
  */
 import { createDynamicClient, type DynamicClient } from "@dynamic-labs-sdk/client";
 import { addWaasEvmExtension } from "@dynamic-labs-sdk/evm/waas";
@@ -12,7 +12,7 @@ import { DynamicProvider } from "@dynamic-labs-sdk/react-hooks";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { WalletProvider } from "@/components/wallet/WalletProvider";
-import { monadTestnet } from "@/lib/chain";
+import { appChain } from "@/lib/chain";
 
 const environmentId = process.env.NEXT_PUBLIC_DYNAMIC_ENV_ID;
 
@@ -33,12 +33,12 @@ function getClient(): DynamicClient | undefined {
           {
             ...(networks.find((n) => n.chain === "EVM") ?? networks[0]),
             chain: "EVM",
-            networkId: String(monadTestnet.id),
-            name: monadTestnet.name,
-            displayName: monadTestnet.name,
-            nativeCurrency: monadTestnet.nativeCurrency,
-            rpcUrls: { http: [...monadTestnet.rpcUrls.default.http] },
-            blockExplorerUrls: [monadTestnet.blockExplorers.default.url],
+            networkId: String(appChain.id),
+            name: appChain.name,
+            displayName: appChain.name,
+            nativeCurrency: appChain.nativeCurrency,
+            rpcUrls: { http: [...appChain.rpcUrls.default.http] },
+            blockExplorerUrls: [appChain.blockExplorers.default.url],
           },
         ],
       },

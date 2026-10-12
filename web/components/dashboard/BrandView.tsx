@@ -101,7 +101,7 @@ export function BrandView({ wallet, toggle }: { wallet: ActiveWallet; toggle?: R
       }
     >
       <div className="grid grid-cols-1 gap-[14px] sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="USDC balance" value={balance === null ? "…" : money(balance)} note="Circle USDC on Monad testnet" />
+        <StatCard label="USDC balance" value={balance === null ? "…" : money(balance)} note="Circle USDC on Arbitrum Sepolia" />
         <StatCard label="In escrow" value={money(inEscrow)} note="refundable once a licence ends" />
         <StatCard label="Spent on renders" value={money(spent)} note="creator payout plus the 10% fee" />
         <StatCard label="Renders" value={renders} note={`${active.length} active licence${active.length === 1 ? "" : "s"}`} />
@@ -226,7 +226,7 @@ function Funding({ address, empty }: { address: string; empty: boolean }) {
           USDC faucet<span className="sr-only"> (opens faucet.circle.com)</span>
         </a>
       </div>
-      {empty && <p className="m-0 text-[13px] text-wait">No testnet USDC in this wallet yet. At faucet.circle.com pick Monad Testnet.</p>}
+      {empty && <p className="m-0 text-[13px] text-wait">No testnet USDC in this wallet yet. At faucet.circle.com pick Arbitrum Sepolia.</p>}
     </Card>
   );
 }

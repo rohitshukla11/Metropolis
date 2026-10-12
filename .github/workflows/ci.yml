@@ -7,7 +7,7 @@ on:
 
 jobs:
   contracts:
-    name: forge test (unit, fuzz, invariant, Monad testnet fork)
+    name: forge test (unit, fuzz, invariant, Arbitrum Sepolia fork)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,15 +22,15 @@ jobs:
         working-directory: contracts
         run: forge build --sizes
 
-      # The fork suite reads Circle USDC on Monad testnet through the public RPC.
+      # The fork suite reads Circle USDC on Arbitrum Sepolia through the public RPC.
       - name: forge test
         working-directory: contracts
         env:
-          MONAD_RPC_URL: https://testnet-rpc.monad.xyz
+          RPC_URL: https://sepolia-rollup.arbitrum.io/rpc
         run: forge test
 
   web:
-    name: web (crypto, pipeline, Monad fork lifecycle + build)
+    name: web (crypto, pipeline, Arbitrum fork lifecycle + build)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -40,7 +40,7 @@ jobs:
         with:
           submodules: recursive
 
-      # anvil and contracts/out: the attester test and the licence lifecycle on a Monad testnet fork.
+      # anvil and contracts/out: the attester test and the licence lifecycle on an Arbitrum Sepolia fork.
       - uses: foundry-rs/foundry-toolchain@v1
         with:
           version: v1.8.3

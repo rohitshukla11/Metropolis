@@ -1,13 +1,13 @@
 "use client";
 /**
- * Browser-side contract writes. Monad charges the gas limit, so every write estimates first and adds
- * 15%. Each returns the hash and how long the receipt took, which the UI shows next to the explorer link.
+ * Browser-side contract writes. Every write estimates gas first and adds 15%, so a slightly busier
+ * block doesn't make it fail. Each returns the hash and how long the receipt took, which the UI shows next to the explorer link.
  */
 import { createPublicClient, http, type Abi, type ContractFunctionArgs, type ContractFunctionName, type Hex, type TransactionReceipt } from "viem";
-import { monadTestnet } from "@/lib/chain";
+import { appChain } from "@/lib/chain";
 import type { ActiveWallet } from "@/components/wallet/WalletProvider";
 
-export const browserPub = createPublicClient({ chain: monadTestnet, batch: { multicall: { wait: 16 } }, transport: http(undefined, { retryCount: 5, retryDelay: 400 }) });
+export const browserPub = createPublicClient({ chain: appChain, batch: { multicall: { wait: 16 } }, transport: http(undefined, { retryCount: 5, retryDelay: 400 }) });
 
 export async function write<const abi extends Abi, fn extends ContractFunctionName<abi, "nonpayable" | "payable">>(
   wallet: ActiveWallet,
@@ -15,7 +15,7 @@ export async function write<const abi extends Abi, fn extends ContractFunctionNa
 ): Promise<{ hash: Hex; ms: number; receipt: TransactionReceipt }> {
   const params = { account: wallet.address, ...call } as never;
   const gas = await browserPub.estimateContractGas(params);
-  const hash = await wallet.client.writeContract({ ...(call as object), chain: monadTestnet, account: wallet.client.account, gas: (gas * 115n) / 100n } as never);
+  const hash = await wallet.client.writeContract({ ...(call as object), chain: appChain, account: wallet.client.account, gas: (gas * 115n) / 100n } as never);
   const t = performance.now();
   const receipt = await browserPub.waitForTransactionReceipt({ hash });
   if (receipt.status !== "success") throw new Error(`transaction reverted: ${hash}`);
@@ -29,7 +29,7 @@ export async function write<const abi extends Abi, fn extends ContractFunctionNa
 export function reason(e: unknown): string {
   const err = e as { shortMessage?: string; message?: string; cause?: { data?: { errorName?: string } } };
   const text = `${err.shortMessage ?? ""} ${err.message ?? ""}`;
-  if (/limited to \d+\/sec|429|rate limit/i.test(text)) return "The Monad testnet RPC is busy (rate limited). Wait a moment and try again.";
+  if (/limited to \d+\/sec|429|rate limit/i.test(text)) return "The network RPC is busy (rate limited). Wait a moment and try again.";
   // Dynamic's wallet service refused to sign for this browser session (e.g. stale state after a sign-out).
   if (/WalletApiError: Forbidden|Error signing message[\s\S]*Forbidden/i.test(text))
     return "Your wallet couldn't sign in this browser session. Sign out, reload the page and sign in again; if it repeats, clear this site's data in the browser and sign in once more.";

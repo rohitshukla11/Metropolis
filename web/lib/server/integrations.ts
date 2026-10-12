@@ -26,7 +26,7 @@ export function integrations(): Integration[] {
       key: "dynamic",
       name: "Dynamic (sign-in, embedded wallets)",
       configured: set("NEXT_PUBLIC_DYNAMIC_ENV_ID"),
-      turnsOn: "Email sign-in and embedded wallets on Monad testnet for creators and brands",
+      turnsOn: "Email sign-in and embedded wallets on Arbitrum Sepolia for creators and brands",
       env: ["NEXT_PUBLIC_DYNAMIC_ENV_ID"],
       whenMissing: "Wallets are off; only seeded dev wallets (DEV_WALLETS=1) can act in the UI",
     },

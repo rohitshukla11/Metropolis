@@ -7,13 +7,13 @@ import {CreatorRegistry} from "../../src/CreatorRegistry.sol";
 import {LicenseRegistry} from "../../src/LicenseRegistry.sol";
 import {LicenseEscrow} from "../../src/LicenseEscrow.sol";
 import {ReceiptAnchor} from "../../src/ReceiptAnchor.sol";
-import {MonadTestnet} from "../../script/MonadTestnet.sol";
+import {ArbitrumSepolia} from "../../script/ArbitrumSepolia.sol";
 import {MockUSDC} from "../utils/MockUSDC.sol";
 
-/// @notice Runs against a Monad testnet fork with Circle's real USDC. Skipped unless MONAD_RPC_URL is set.
-contract MonadTestnetForkTest is Base {
+/// @notice Runs against an Arbitrum Sepolia fork with Circle's real USDC. Skipped unless RPC_URL is set.
+contract ArbitrumSepoliaForkTest is Base {
     function setUp() public override {
-        string memory rpc = vm.envOr("MONAD_RPC_URL", string(""));
+        string memory rpc = vm.envOr("RPC_URL", string(""));
         if (bytes(rpc).length == 0) {
             vm.skip(true);
             return;
@@ -22,7 +22,7 @@ contract MonadTestnetForkTest is Base {
         super.setUp();
         // Swap the mock for Circle's token. setEscrow is once-only, so the licence registry and
         // receipt anchor are redeployed alongside the new escrow.
-        usdc = MockUSDC(MonadTestnet.USDC);
+        usdc = MockUSDC(ArbitrumSepolia.USDC);
         licences = new LicenseRegistry(platform, creators);
         receipts = new ReceiptAnchor(platform);
         escrow = new LicenseEscrow(platform, usdc, licences, receipts, treasury, FEE_BPS);
@@ -34,9 +34,9 @@ contract MonadTestnetForkTest is Base {
     }
 
     function test_chainAndUsdc() public view {
-        assertEq(block.chainid, MonadTestnet.CHAIN_ID);
-        IERC20Metadata t = IERC20Metadata(MonadTestnet.USDC);
-        assertGt(MonadTestnet.USDC.code.length, 0);
+        assertEq(block.chainid, ArbitrumSepolia.CHAIN_ID);
+        IERC20Metadata t = IERC20Metadata(ArbitrumSepolia.USDC);
+        assertGt(ArbitrumSepolia.USDC.code.length, 0);
         assertEq(t.decimals(), 6);
         assertEq(t.symbol(), "USDC");
     }
@@ -44,7 +44,7 @@ contract MonadTestnetForkTest is Base {
     function test_renderAndRefund_withCircleUsdc() public {
         _register(creator);
         uint256 id = _license(brand, 3);
-        deal(MonadTestnet.USDC, brand, 3 * PRICE);
+        deal(ArbitrumSepolia.USDC, brand, 3 * PRICE);
         vm.startPrank(brand);
         usdc.approve(address(escrow), 3 * PRICE);
         escrow.deposit(id, 3 * PRICE);

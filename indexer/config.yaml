@@ -1,9 +1,9 @@
 # yaml-language-server: $schema=./node_modules/envio/evm.schema.json
-# Likeness on Monad testnet: all four protocol contracts from the deployment block.
+# Likeness on Arbitrum Sepolia: all four protocol contracts from the deployment block.
 #
-# Data source: HyperSync (built in for monad-testnet) when ENVIO_API_TOKEN is set, with the RPC as a
+# Data source: HyperSync (https://421614.hypersync.xyz) when ENVIO_API_TOKEN is set, with the RPC as a
 # fallback; without a token, the RPC is the sync source (ENVIO_RPC_FOR=sync, the default here).
-# `pnpm local` picks this for you. The public RPC serves eth_getLogs 100 blocks at a time.
+# `pnpm local` picks this for you.
 name: likeness-indexer
 contracts:
   - name: CreatorRegistry
@@ -36,19 +36,19 @@ contracts:
 field_selection:
   transaction_fields: [hash]
 chains:
-  - id: 10143
-    start_block: ${ENVIO_START_BLOCK:-69802475}
+  - id: 421614
+    start_block: ${ENVIO_START_BLOCK:-0}
     rpc:
-      - url: ${ENVIO_RPC_URL:-https://testnet-rpc.monad.xyz}
+      - url: ${ENVIO_RPC_URL:-https://sepolia-rollup.arbitrum.io/rpc}
         for: ${ENVIO_RPC_FOR:-sync}
-        initial_block_interval: 100
-        interval_ceiling: 100
+        initial_block_interval: 5000
+        interval_ceiling: 10000
     contracts:
       - name: CreatorRegistry
-        address: "0xc0eadb706D175e317c8D89cD250781fC3d14008B"
+        address: "0x0000000000000000000000000000000000000000"
       - name: LicenseRegistry
-        address: "0x38c8EcA2782fB64C23daB9B3432E668F81Fbacc9"
+        address: "0x0000000000000000000000000000000000000000"
       - name: LicenseEscrow
-        address: "0xf7659B8CFA2A484aE30e638c2490131Bc568dA0A"
+        address: "0x0000000000000000000000000000000000000000"
       - name: ReceiptAnchor
-        address: "0x272b5Bdf04564dA897a66aE84E18c822876d72Fe"
+        address: "0x0000000000000000000000000000000000000000"

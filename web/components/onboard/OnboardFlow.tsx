@@ -2,8 +2,7 @@
 
 /**
  * Creator onboarding in three steps, under one progress bar:
- *   1. Sign in: email through Dynamic; the embedded wallet is created once the code is verified, and
- *      MON for gas is dripped in the background (nothing is shown unless that fails).
+ *   1. Sign in: email through Dynamic; the embedded wallet is created once the code is verified.
  *   2. Verify it's you: one screen with the consent and "Agree and verify", which signs the consent
  *      with the wallet and starts the Didit session; the server reads Didit's decision.
  *   3. Protect your photos: three guided photos, each matched to the liveness selfie, then "Protect
@@ -24,11 +23,11 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { createPublicClient, formatEther, http, type Hex } from "viem";
+import { createPublicClient, http, type Hex } from "viem";
 import { CreatorRegistryAbi } from "@/lib/abi/CreatorRegistry";
 import { actionMessage } from "@/lib/auth";
 import { categoryLabels } from "@/lib/categories";
-import { explorer, monadTestnet } from "@/lib/chain";
+import { explorer, appChain } from "@/lib/chain";
 import { api, reason, write } from "@/lib/client/tx";
 import { CONSENT_POINTS, CONSENT_VERSION, DIDIT_LINKS, consentTextHash } from "@/lib/consent";
 import { referenceSetHash, sealReferenceSet, sha256Hex, type ReferenceSet } from "@/lib/crypto/envelope";
@@ -47,7 +46,7 @@ import { Note, Tx, fmtDate, inputClass, shortAddr } from "@/components/ui";
 import { useWallet, type ActiveWallet } from "@/components/wallet/WalletProvider";
 import { CaptureStep, type PhotoState } from "./CaptureStep";
 
-const pub = createPublicClient({ chain: monadTestnet, transport: http() });
+const pub = createPublicClient({ chain: appChain, transport: http() });
 
 /** Set when this tab registers the wallet, so a refresh of the done screen stays on it. */
 const DONE_KEY = "likeness:onboard:done";
@@ -64,8 +63,6 @@ type Didit = {
 };
 type Attested = { provider: string; liveness: string; level: string };
 type Facts = {
-  balance?: string;
-  dripTx?: string;
   fingerprint?: string;
   attested?: Attested;
   registerTx?: string;
@@ -98,7 +95,6 @@ export function OnboardFlow() {
   const [registered, setRegistered] = useState<boolean | null>(null);
   const [consented, setConsented] = useState<boolean | null>(null);
   const [didit, setDidit] = useState<Didit | null>(null);
-  const [dripError, setDripError] = useState<string | null>(null);
   const [photoStep, setPhotoStep] = useState<{ photos: Uint8Array[]; set: ReferenceSet; hash?: Hex } | null>(null);
   const [publicPhoto, setPublicPhoto] = useState<string | null>(null);
   useEffect(() => {
@@ -125,7 +121,6 @@ export function OnboardFlow() {
     api<Didit>(`/api/didit/status?address=${wallet.address}`)
       .then(setDidit)
       .catch(() => setDidit({ state: "none" }));
-    pub.getBalance({ address: wallet.address }).then((b) => note({ balance: formatEther(b) })).catch(() => {});
   }, [wallet, note]);
 
   const done = !!wallet && registered === true && storage.get(DONE_KEY) === wallet.address.toLowerCase();
@@ -134,30 +129,6 @@ export function OnboardFlow() {
     if (wallet && registered === true && !done) router.replace("/dashboard");
   }, [wallet, registered, done, router]);
 
-  // A new, empty wallet gets MON for gas in the background, once, with the drip's own limits.
-  const drip = useCallback(
-    async (address: `0x${string}`) => {
-      setDripError(null);
-      try {
-        if ((await pub.getBalance({ address })) > 0n) return;
-        const r = await fetch("/api/drip", { method: "POST", body: JSON.stringify({ address }) });
-        const j = (await r.json()) as { hash?: Hex; error?: string };
-        if (!r.ok || !j.hash) throw new Error(j.error ?? `drip failed (${r.status})`);
-        note({ dripTx: j.hash });
-        await pub.waitForTransactionReceipt({ hash: j.hash });
-        note({ balance: formatEther(await pub.getBalance({ address })) });
-      } catch (e) {
-        setDripError(e instanceof Error ? e.message : String(e));
-      }
-    },
-    [note],
-  );
-  const dripped = useRef<string | null>(null);
-  useEffect(() => {
-    if (!wallet || wallet.kind === "dev" || registered !== false || dripped.current === wallet.address) return;
-    dripped.current = wallet.address;
-    void drip(wallet.address);
-  }, [wallet, registered, drip]);
 
   const resolving = !!wallet && (registered === null || consented === null || didit === null);
   const step: 1 | 2 | 3 | "done" | null = !wallet ? 1 : resolving || (registered && !done) ? null : done ? "done" : didit?.state === "approved" ? 3 : 2;
@@ -209,14 +180,6 @@ export function OnboardFlow() {
         {step === "done" && wallet && !photoStep && <Done wallet={wallet} liveness={facts.liveness} registeredAt={facts.registeredAt} photo={publicPhoto} />}
       </section>
 
-      {dripError && wallet && (
-        <p role="alert" className="m-0 flex flex-wrap items-center gap-3 text-[15px] text-bad">
-          We couldn&apos;t send your wallet gas for registering ({dripError}).
-          <button type="button" onClick={() => void drip(wallet.address)} className={pillClass("outline", "min-h-11 px-4 text-[14px]")}>
-            Retry
-          </button>
-        </p>
-      )}
 
       <Details summary="Details">
         <dl className="m-0 grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-[10rem_1fr]">
@@ -225,18 +188,14 @@ export function OnboardFlow() {
             {wallet ? (
               <a href={explorer.address(wallet.address)} target="_blank" rel="noreferrer">
                 {wallet.address}
-                <span className="sr-only"> (opens MonadVision)</span>
+                <span className="sr-only"> (opens Arbiscan)</span>
               </a>
             ) : (
               "not signed in"
             )}
           </dd>
           <dt className="text-grey">Network</dt>
-          <dd className="m-0">Monad testnet (10143)</dd>
-          <dt className="text-grey">MON balance</dt>
-          <dd className="tnum m-0">{facts.balance ? `${facts.balance} MON` : "—"}</dd>
-          <dt className="text-grey">Gas drip</dt>
-          <dd className="m-0">{facts.dripTx ? <Tx hash={facts.dripTx} /> : dripError ? `failed: ${dripError}` : "—"}</dd>
+          <dd className="m-0">Arbitrum Sepolia (421614)</dd>
           <dt className="text-grey">Passkey key fingerprint</dt>
           <dd className="tnum m-0 font-mono text-[13px]">{facts.fingerprint ?? "—"}</dd>
           <dt className="text-grey">Didit session</dt>
@@ -315,7 +274,7 @@ export function SignIn() {
   return (
     <div className="flex flex-col gap-4">
       <h2 className="m-0 text-[18px] font-bold">Sign in with your email</h2>
-      <p className="m-0 max-w-2xl text-[15px] text-grey">We create your wallet on Monad as you sign in. No seed phrase, no extension.</p>
+      <p className="m-0 max-w-2xl text-[15px] text-grey">We create your wallet as you sign in. No seed phrase, no extension.</p>
       {!user.data && !otp && (
         <form
           className="flex flex-wrap gap-3"
@@ -664,7 +623,7 @@ function ProtectStep({ wallet, note, onRegistered }: { wallet: ActiveWallet; not
         shots.forEach((s) => s?.fill(0));
         setShots([null, null, null]);
       }
-      say("Registering you on Monad…");
+      say("Registering you on chain…");
       const a = await api<{ attestation: Record<string, unknown> & { verifiedAt: string }; deadline: string; signature: Hex; provider: string; liveness: string; level: string }>("/api/attest", {
         method: "POST",
         body: JSON.stringify({ address: wallet.address, referenceSet: sealed.current }),
@@ -692,7 +651,7 @@ function ProtectStep({ wallet, note, onRegistered }: { wallet: ActiveWallet; not
         setMatchError("Your photo check has expired. Take the three photos again; it only takes a moment.");
         return;
       }
-      setError(/insufficient funds|exceeds the balance/i.test(text) ? "Your wallet has no MON for gas yet. Use Retry under this card, then try again." : text);
+      setError(/insufficient funds|exceeds the balance/i.test(text) ? "Your wallet couldn't pay the network fee for registering. Try again in a moment." : text);
     } finally {
       setBusy(false);
     }

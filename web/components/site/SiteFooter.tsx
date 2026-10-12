@@ -14,7 +14,7 @@ export function SiteFooter() {
             LIKENESS IS YOURS
           </h2>
           <div className="flex flex-col gap-3 text-[15px] text-grey-dark">
-            <span>Testnet demo on Monad · adults only</span>
+            <span>Testnet demo on Arbitrum · adults only</span>
             <Link href="/status" className="text-grey-dark underline-offset-2 hover:text-white hover:underline">
               What this server runs
             </Link>
