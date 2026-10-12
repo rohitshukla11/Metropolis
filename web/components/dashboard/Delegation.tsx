@@ -81,6 +81,10 @@ export function Delegation() {
     }
   }
 
+  // Nothing to offer: no delegation provider on this server and no grant to show or revoke. Brands then
+  // confirm each render's payment in their wallet, which the Generate page explains.
+  if (!provider && !g) return null;
+
   return (
     <Card className="space-y-4">
       <div className="flex items-center justify-between">
