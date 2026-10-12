@@ -152,7 +152,7 @@ export function OnboardFlow() {
   );
   const dripped = useRef<string | null>(null);
   useEffect(() => {
-    if (!wallet || wallet.kind === "dev" || registered !== false || dripped.current === wallet.address) return;
+    if (!wallet || wallet.kind !== "dynamic" || registered !== false || dripped.current === wallet.address) return;
     dripped.current = wallet.address;
     void drip(wallet.address);
   }, [wallet, registered, drip]);

@@ -282,6 +282,21 @@ Roadmap:
 - The design tokens (colours, type scale, radii) are reused from my earlier project, Whistle.
 - Built with AI-assisted development using Claude Code, which I directed and reviewed.
 
+## Test data and local-only helpers
+
+None of these exist in a production build, even if their variables are set; leave them unset on Vercel.
+
+- **Server-held test brand** (`TEST_BRAND=1`, key in `.secrets/test-brand.key`): a local brand, "Brew &
+  Co.", whose key stays on the server, so one person can act as creator and brand in the same browser
+  through the header's account switcher. Its profile goes through the normal brand-onboarding code, and
+  it signs only Likeness messages and transactions to the protocol contracts or USDC
+  ([`lib/server/testbrand.ts`](web/lib/server/testbrand.ts); tests prove it is off in production).
+- **DEV wallets** (`DEV_WALLETS=1`) and **DEV delegation** (`DEV_DELEGATION=1`): seeded throwaway wallets
+  for fork tests and the demo.
+- **Test renderer** (`DEV_RENDERER=1`): a clearly marked TEST RENDER when there is no Gemini key.
+- Creators, brands and licences made from `localhost` against the Arbitrum Sepolia contracts are test
+  data; their profiles and samples live in the local store (`web/.data`), never in production's.
+
 ## Contributor notes
 
 - **No real brand or product names** in demos, fixtures, tests, docs, screenshots or placeholder text. Use

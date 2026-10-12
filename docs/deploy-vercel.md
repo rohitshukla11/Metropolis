@@ -102,6 +102,7 @@ Passkeys are bound to `likeness.website`, which covers `www.likeness.website` to
 | `ENVIO_GRAPHQL_SECRET` | 🔒 | optional | |
 | `DYNAMIC_API_KEY`, `DYNAMIC_WEBHOOK_SECRET`, `DYNAMIC_DELEGATION_PRIVATE_KEY_PEM`, `DYNAMIC_AGENT_JSON` | 🔒 | optional | Delegated access and a Dynamic server wallet; off by default |
 | `DEV_WALLETS`, `DEV_DELEGATION`, `DEV_RENDERER` | | **leave unset** | Test wallets, test delegation and the TEST RENDER renderer |
+| `TEST_BRAND`, `TEST_BRAND_KEY_FILE` | | **leave unset** | The local server-held test brand; off in production builds regardless |
 | `NEXT_PUBLIC_HIDE_DEV_OVERLAY` | | **leave unset** | Development only |
 
 Redis is not used: off-chain state is in the private Blob store.

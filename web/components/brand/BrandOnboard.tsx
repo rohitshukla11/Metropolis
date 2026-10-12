@@ -81,7 +81,7 @@ export function BrandOnboard() {
     }
   }, []);
   useEffect(() => {
-    if (!wallet || wallet.kind === "dev" || dripped.current === wallet.address) return;
+    if (!wallet || wallet.kind !== "dynamic" || dripped.current === wallet.address) return;
     dripped.current = wallet.address;
     void drip(wallet.address);
   }, [wallet, drip]);

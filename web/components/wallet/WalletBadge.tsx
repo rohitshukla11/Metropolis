@@ -10,11 +10,26 @@ import { useWallet } from "./WalletProvider";
 
 /** Header identity: the wallet the app is acting as (DEV wallets marked), and the per-tab DEV picker. */
 export function WalletBadge() {
-  const { wallet, devWallets, useDev } = useWallet();
+  const { wallet, devWallets, useDev, testBrand, actAs, setActAs } = useWallet();
   const dynamic = useDynamicState();
   const profiles = useProfiles(wallet ? [wallet.address] : []);
   return (
     <div className="flex flex-wrap items-center justify-end gap-3 text-[15px]">
+      {testBrand && (
+        // Local only: shown when the server offers its server-held test brand (TEST_BRAND=1, never in production).
+        <div role="group" aria-label="Act as" className="grid grid-cols-2 rounded-full bg-ink-raised p-1 text-[13px] font-semibold">
+          {(
+            [
+              ["me", "Creator (me)"],
+              ["brand", testBrand.name],
+            ] as const
+          ).map(([v, label]) => (
+            <button key={v} type="button" aria-pressed={actAs === v} onClick={() => setActAs(v)} className={`min-h-9 rounded-full px-3.5 ${actAs === v ? "bg-white text-ink" : "text-grey-dark hover:text-white"}`}>
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
       {devWallets.length > 0 && (
         <select
           aria-label="Act as a DEV test wallet in this tab"
