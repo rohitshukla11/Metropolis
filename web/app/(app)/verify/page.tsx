@@ -288,7 +288,7 @@ function Verify() {
                 <Check ok={!!result.receipt}>
                   {result.receipt ? (
                     <>
-                      Receipt recorded on Arbitrum
+                      Receipt recorded on Arbitrum Sepolia
                       {result.receipt.tx && (
                         <>
                           {" "}
@@ -368,7 +368,7 @@ function Verify() {
 function subline(v: V): string {
   switch (v.verdict) {
     case "Licensed":
-      return "Made under an active licence the person in it approved, paid for and recorded on Arbitrum.";
+      return "Made under an active licence the person in it approved, paid for and recorded on Arbitrum Sepolia.";
     case "Revoked":
       return "Licensed when it was made. The creator revoked the licence afterwards, so it should not be used in new placements.";
     case "Expired":

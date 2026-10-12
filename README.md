@@ -3,9 +3,9 @@
 **Live demo:** [likeness.website](https://likeness.website) · **Pitch video:** <PITCH_URL> ·
 **Demo video:** <DEMO_URL> · **Code:** [github.com/rohitshukla11/likeness.website](https://github.com/rohitshukla11/likeness.website)
 
-Likeness is a likeness-licensing protocol on Arbitrum, with a reference app on top. Real, verified adults
-license their face to brands and AI tools, get paid in USDC for every image made with it, and can pull
-it back at any time.
+Likeness is a likeness-licensing protocol on Arbitrum, with a reference app on top, running as a testnet
+demo on Arbitrum Sepolia. Real, verified adults license their face to brands and AI tools, get paid in
+USDC for every image made with it, and can pull it back at any time.
 
 ## The problem
 
@@ -127,6 +127,8 @@ Deployed 2026-10-12 (UTC) from `0x68343Aa0598b7FCAA102769D172e59cdDfae10f2`, sta
 | ReceiptAnchor | [`0x448B136468289216036a4C13995EA02C39F6B871`](https://sepolia.arbiscan.io/address/0x448B136468289216036a4C13995EA02C39F6B871#code) | [`0xc6af292c…`](https://sepolia.arbiscan.io/tx/0xc6af292ca8b8af9ceebe2ddc30ca106af506f2e370f27d17c6b1e04b34849c74) |
 | LicenseEscrow | [`0x50a730C0e9998e1F40a3211f00239ea60Be08163`](https://sepolia.arbiscan.io/address/0x50a730C0e9998e1F40a3211f00239ea60Be08163#code) | [`0xf43c271b…`](https://sepolia.arbiscan.io/tx/0xf43c271bfcf5cf896ab14868e3790a969b854fb3ecab891b7b90d4aa1e06f1ba) |
 | USDC (Circle) | [`0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d`](https://sepolia.arbiscan.io/address/0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d) | [Circle docs](https://developers.circle.com/stablecoins/usdc-contract-addresses) |
+
+Deployed and verified on Arbitrum Sepolia (testnet). Mainnet launch follows an independent contract audit and production-grade identity verification.
 
 Wiring: [`LicenseRegistry.setEscrow`](https://sepolia.arbiscan.io/tx/0x33c10280b85feb7ca4a038112f1921ff8a250fa05789b32ec1f340caa08053e6),
 [`ReceiptAnchor.setEscrow`](https://sepolia.arbiscan.io/tx/0xf6f98df95202a3e95a9897c44b1b52a2b1b322d2970eb6ac1a162bea4f69860a),
@@ -257,6 +259,16 @@ Limitations today:
 
 Roadmap:
 
+- **Path to mainnet.** Today Likeness runs on Arbitrum Sepolia, a testnet. Before it moves to Arbitrum
+  One:
+  - an independent audit of the four contracts, especially the escrow and the payout logic;
+  - Didit at the full verification level (active liveness), under a production agreement and a
+    data-processing agreement;
+  - a C2PA signing certificate from a trusted certificate authority, replacing the test certificate;
+  - Dynamic's production environment instead of the sandbox;
+  - sponsored gas through a paymaster;
+  - Circle's native USDC on Arbitrum One;
+  - a legal entity, and licence terms reviewed by counsel for likeness licensing.
 - **Sponsored gas via EIP-7702 + paymaster,** so new wallets need no top-up at all.
 - **Casting calls:** a brand posts a brief, and matching creators choose whether to reveal themselves.
 - **"Casting calls only" mode:** a creator is never browsable, and appears only to brands they answer.

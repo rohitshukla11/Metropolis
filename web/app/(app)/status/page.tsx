@@ -26,7 +26,7 @@ export default function Status() {
   return (
     <AppPage title="Status" description="What this server runs, and which credential turns each piece on.">
       <div className="grid grid-cols-1 gap-[14px] sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Chain" value={isLocalFork() ? "Local fork" : "Arbitrum Sepolia"} note={isLocalFork() ? "An anvil fork of Arbitrum Sepolia" : `Chain ID ${deployment.chainId}`} />
+        <StatCard label="Chain" value={isLocalFork() ? "Local fork" : "Arbitrum Sepolia (testnet)"} note={isLocalFork() ? "An anvil fork of Arbitrum Sepolia" : `Chain ID ${deployment.chainId}`} />
         <StatCard label="History" value={historySource() === "envio" ? "Envio" : "RPC scan"} note={historySource() === "envio" ? "Envio indexer" : "RPC log scan"} />
         <StatCard label="Renderer" value={plan.test ? "Test" : "Live"} note={plan.test ? "DevRenderer (TEST RENDER)" : plan.primary} />
         <StatCard label="Integrations" value={`${on} of ${list.length}`} note="configured" />
@@ -56,7 +56,7 @@ export default function Status() {
       <Card id="contracts" title="For AI tools and verifiers">
         <p className="m-0 max-w-3xl text-[14px] text-grey">
           Likeness is a protocol; this app is its reference client. Any image tool can check a licence, pay per render and anchor a receipt through the
-          same four contracts on Arbitrum, and anyone can check a file.
+          same four contracts on Arbitrum Sepolia (testnet), and anyone can check a file.
         </p>
         <ul className="m-0 grid list-none grid-cols-1 gap-[14px] p-0 sm:grid-cols-2">
           {CONTRACTS.flatMap((c) => {

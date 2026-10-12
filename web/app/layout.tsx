@@ -8,7 +8,7 @@ const display = Unbounded({ subsets: ["latin"], weight: ["700", "800", "900"], v
 const body = Poppins({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-body-face", display: "swap" });
 
 const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://likeness.website";
-const DESCRIPTION = "Licence your face to AI, on your terms, and pull it back any time. A likeness-licensing protocol on Arbitrum.";
+const DESCRIPTION = "Licence your face to AI, on your terms, and pull it back any time. A likeness-licensing protocol, running as a testnet demo on Arbitrum Sepolia.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
