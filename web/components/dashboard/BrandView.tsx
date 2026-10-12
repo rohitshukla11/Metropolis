@@ -11,7 +11,7 @@ import { categoryLabels } from "@/lib/categories";
 import { deployment } from "@/lib/deployment";
 import { usdc, type Licence } from "@/lib/licensing";
 import { useBrandCards, useProfiles } from "@/lib/client/profiles";
-import { AppPage, BrandChip, btnClass, Card, CreatorFace, StatCard, StatusPill } from "@/components/ds";
+import { AppPage, btnClass, Card, CreatorFace, Initial, StatCard, StatusPill } from "@/components/ds";
 import { IconSearch } from "@/components/ds/icons";
 import { fmtDay, STATUS_LABEL, Tx } from "@/components/ui";
 import type { ActiveWallet } from "@/components/wallet/WalletProvider";
@@ -193,41 +193,10 @@ export function BrandView({ wallet, toggle }: { wallet: ActiveWallet; toggle?: R
         </div>
 
         <div className="flex min-w-0 flex-col gap-[18px]">
-          <Funding address={wallet.address} empty={balance === 0n} />
           <BrandProfileCard address={wallet.address} />
         </div>
       </div>
     </AppPage>
-  );
-}
-
-/** Where the brand's USDC comes from on testnet. */
-function Funding({ address, empty }: { address: string; empty: boolean }) {
-  const [copied, setCopied] = useState(false);
-  return (
-    <Card title="Funding">
-      <p className="m-0 text-[13px] text-grey">Send testnet USDC to this wallet, then deposit it into a licence&apos;s escrow.</p>
-      <span className="tnum break-all rounded-[12px] bg-paper px-3 py-2 font-mono text-[12px]">{address}</span>
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={async () => {
-            try {
-              await navigator.clipboard.writeText(address);
-              setCopied(true);
-              setTimeout(() => setCopied(false), 2000);
-            } catch {}
-          }}
-          className={btnClass("outline")}
-        >
-          <span aria-live="polite">{copied ? "Copied" : "Copy address"}</span>
-        </button>
-        <a href="https://faucet.circle.com" target="_blank" rel="noreferrer" className={btnClass(empty ? "ink" : "outline")}>
-          USDC faucet<span className="sr-only"> (opens faucet.circle.com)</span>
-        </a>
-      </div>
-      {empty && <p className="m-0 text-[13px] text-wait">No testnet USDC in this wallet yet. At faucet.circle.com pick Arbitrum Sepolia.</p>}
-    </Card>
   );
 }
 
@@ -244,7 +213,15 @@ function BrandProfileCard({ address }: { address: string }) {
     >
       {card ? (
         <>
-          <BrandChip brand={card} />
+          <span className="flex min-w-0 items-center gap-2.5">
+            {card.logo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={card.logo} alt="" width={32} height={32} className="h-8 w-8 shrink-0 rounded-full border border-field bg-white object-contain" />
+            ) : (
+              <Initial name={card.name} size={32} />
+            )}
+            <span className="truncate text-[16px] font-semibold">{card.name}</span>
+          </span>
           {card.website && <span className="break-all text-[13px] text-grey">{card.website}</span>}
         </>
       ) : (
