@@ -33,7 +33,7 @@ export const FREE_EMAIL_DOMAINS = new Set([
   "zoho.com", "yandex.com", "yandex.ru", "qq.com", "163.com", "126.com", "rediffmail.com", "tutanota.com", "fastmail.com",
 ]);
 
-/** The host of a website ("https://www.levis.com/about" → "levis.com"), lowercased, without "www.". */
+/** The host of a website ("https://www.brewandco.example/about" → "brewandco.example"), lowercased, without "www.". */
 export function websiteDomain(website: string): string | null {
   try {
     const u = new URL(/^[a-z]+:\/\//i.test(website.trim()) ? website.trim() : `https://${website.trim()}`);
@@ -51,7 +51,7 @@ export function emailDomain(email: string): string | null {
 
 /**
  * Does the work email belong to the website's domain? Equal, or one a subdomain of the other
- * ("marketing.levis.com" and "levis.com"). Free email domains never match.
+ * ("marketing.brewandco.example" and "brewandco.example"). Free email domains never match.
  */
 export function emailMatchesWebsite(email: string, website: string): boolean {
   const e = emailDomain(email);

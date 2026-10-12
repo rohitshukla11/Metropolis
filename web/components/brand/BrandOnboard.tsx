@@ -256,15 +256,15 @@ function CompanyStep({ wallet, initial, onSaved }: { wallet: ActiveWallet; initi
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <label className="flex flex-col gap-1.5">
           <span className="text-[14px] font-medium text-grey">Company name</span>
-          <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} autoComplete="organization" placeholder="Levis" />
+          <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} autoComplete="organization" placeholder="Brew & Co." />
         </label>
         <label className="flex flex-col gap-1.5">
           <span className="text-[14px] font-medium text-grey">Website</span>
-          <input className={inputClass} value={website} onChange={(e) => setWebsite(e.target.value)} inputMode="url" autoComplete="url" placeholder="levis.com" />
+          <input className={inputClass} value={website} onChange={(e) => setWebsite(e.target.value)} inputMode="url" autoComplete="url" placeholder="brewandco.example" />
         </label>
         <label className="flex flex-col gap-1.5">
           <span className="text-[14px] font-medium text-grey">Work email</span>
-          <input className={inputClass} value={email} onChange={(e) => setEmail(e.target.value)} type="email" autoComplete="email" placeholder="you@levis.com" />
+          <input className={inputClass} value={email} onChange={(e) => setEmail(e.target.value)} type="email" autoComplete="email" placeholder="you@brewandco.example" />
         </label>
         <div className="flex flex-col gap-1.5">
           <span className="text-[14px] font-medium text-grey">Logo (optional)</span>

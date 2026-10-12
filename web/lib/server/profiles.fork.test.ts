@@ -163,22 +163,22 @@ describe.skipIf(!run)("public profiles, samples and brands", () => {
   let session = "";
   it("onboards a brand with a verified domain (work email at the website's domain)", async () => {
     const { sendEmailCode, testMailbox, confirmEmailCode, saveBrandProfile, signBrandPolicy, startBrandSession, brandCards } = await import("./brands");
-    await sendEmailCode(brand, await sign(brandKey, "verify work email", { email: "ads@levis.com" }), "ads@levis.com");
-    await confirmEmailCode(brand, testMailbox("ads@levis.com")!);
-    const fields = brandProfileFields({ name: "Levis", website: "https://www.levis.com", uses: ["Advertising", "Social"], monthlyRenders: "50–500", logoSha256: null });
-    const saved = await saveBrandProfile({ address: brand, auth: await sign(brandKey, "save brand profile", fields), name: "Levis", website: "https://www.levis.com", uses: ["Advertising", "Social"], monthlyRenders: "50–500" });
+    await sendEmailCode(brand, await sign(brandKey, "verify work email", { email: "ads@brewandco.example" }), "ads@brewandco.example");
+    await confirmEmailCode(brand, testMailbox("ads@brewandco.example")!);
+    const fields = brandProfileFields({ name: "Brew & Co.", website: "https://www.brewandco.example", uses: ["Advertising", "Social"], monthlyRenders: "50–500", logoSha256: null });
+    const saved = await saveBrandProfile({ address: brand, auth: await sign(brandKey, "save brand profile", fields), name: "Brew & Co.", website: "https://www.brewandco.example", uses: ["Advertising", "Social"], monthlyRenders: "50–500" });
     expect(saved.badge).toBe("verified-domain");
     expect(saved.kyb).toBe("not-run");
     await signBrandPolicy(brand, await sign(brandKey, "agree to the brand policy", { version: BRAND_POLICY_VERSION, "text sha256": await brandPolicyHash() }));
     session = (await startBrandSession(brand, await sign(brandKey, "start brand session", {}))).token;
     // What the creator sees on the request, before approving.
-    expect((await brandCards([brand]))[brand]).toMatchObject({ name: "Levis", badge: "verified-domain" });
+    expect((await brandCards([brand]))[brand]).toMatchObject({ name: "Brew & Co.", badge: "verified-domain" });
   });
 
   it("marks a free email domain as an unverified brand", async () => {
     const { badgeFor } = await import("./brands");
-    expect(badgeFor({ emailDomain: "gmail.com", method: "email-code", at: 0 }, "levis.com")).toBe("unverified");
-    expect(badgeFor({ emailDomain: "levis.com", method: "email-code", at: 0 }, "gap.com")).toBe("unverified");
+    expect(badgeFor({ emailDomain: "gmail.com", method: "email-code", at: 0 }, "brewandco.example")).toBe("unverified");
+    expect(badgeFor({ emailDomain: "brewandco.example", method: "email-code", at: 0 }, "othershop.example")).toBe("unverified");
   });
 
   // ---------------------------------------------------------------- visibility tiers
