@@ -8,7 +8,10 @@ export const MEASUREMENTS: {
   registerMs: { value: number; source: string } | null;
   rendersWithReceipt: { value: number; source: string };
 } = {
-  registerMs: null,
+  registerMs: {
+    value: 230,
+    source: "CreatorRegistry.register on Arbitrum Sepolia, 2026-10-12, local run: send to receipt in the browser over the public RPC",
+  },
   /** By construction: payRender anchors the receipt in the same transaction, and files are released only after it. */
   rendersWithReceipt: {
     value: 100,

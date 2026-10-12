@@ -136,16 +136,21 @@ Wiring: [`LicenseRegistry.setEscrow`](https://sepolia.arbiscan.io/tx/0x33c10280b
 Roles: attester `0x8d53e13407890e18022bfAa413193ba4C6DCc1a5`; render agent
 `0x331f0F6fb5c3c09d84Ae2C1D533b4F739dA6E87d`; owner and treasury, the deployer; fee 10%.
 
-**Confirmation times** (send to receipt, in the browser, over the public RPC):
+**Confirmation times**, measured on Arbitrum Sepolia, 2026-10-12, local run: send to receipt, in the
+browser, over the public RPC, against the deployed contracts with real accounts (a Didit-verified creator
+and two Gemini renders).
 
-| Step | Transaction | Time |
-|---|---|---|
-| Register a creator | `CreatorRegistry.register` | measured on the live deployment |
-| Request a licence | `LicenseRegistry.request` | measured on the live deployment |
-| Deposit | `LicenseEscrow.deposit` | measured on the live deployment |
-| Pay a render | `LicenseEscrow.payRender` | measured on the live deployment |
-| Revoke | `LicenseRegistry.revoke` | measured on the live deployment |
-| Refund | `LicenseEscrow.refund` | measured on the live deployment |
+| Step | Transaction | Measured | Runs |
+|---|---|---|---|
+| Register a creator | [`CreatorRegistry.register`](https://sepolia.arbiscan.io/tx/0x811b64a554c6e2f66b54d520fe3129fdc5ea4aafebd5fee3bf57dbb70ae109a1) | 230 ms | 1 |
+| Issue a licence | [`LicenseRegistry.request`](https://sepolia.arbiscan.io/tx/0xa4ed4a5481b8d63b15a02421daf176f87713c908e0b70c1dbc4f731796873ef4) | 922 ms | 1 |
+| Allow the escrow to take USDC | [`USDC.approve`](https://sepolia.arbiscan.io/tx/0x840de37ab23ae56cf7e2625880b8fbacddc1c64a0cf00c073e605ba174f4d7cb) | 1,494 ms | 1 |
+| Deposit | [`LicenseEscrow.deposit`](https://sepolia.arbiscan.io/tx/0xf4f92bfd72a8c746a8414ae6e9ee3aa8133ef57fc4f69143f32274fc5d59e3eb) | 233 ms | 1 |
+| Pay a render | `LicenseEscrow.payRender` ([render 0](https://sepolia.arbiscan.io/tx/0x1763d0773d6f97d83ada3d6b72da6df0ecaf63ce3d48fef424043382d30a117c), [render 1](https://sepolia.arbiscan.io/tx/0x80b9e5e9f01a3a3c8eb0fafc4ce41ca79077c981659ff49a71fd02d6c538290e)) | median 1,217 ms (1,052–1,382 ms) | 2 |
+
+Revoke, the refusal of a render after revocation, and the refund were verified end to end on an anvil
+fork of Arbitrum Sepolia against the deployed contracts (the licence lifecycle test and a full run through
+the app); they were not measured on the live chain, so no times are given for them.
 
 ## Business model and go-to-market
 
@@ -219,9 +224,10 @@ a new project from this repository with root `web`, a private Blob store,
   chain holds only a hash of the encrypted manifest and of the Didit session ID. Keys and plaintext live
   in memory for one operation and are zeroed afterwards.
 - **What Didit sees, and for how long.** Didit sees the ID document and the liveness selfie, and at the
-  `full` level matches the three reference photos. Likeness asks Didit not to keep a face-search
-  embedding, calls photo matches with `save_api_request=false`, and deletes the session with
-  `privacy_erasure` as soon as the attestation is signed. Didit's own retention is a console setting
+  `full` level matches the three reference photos. Likeness calls those photo matches with
+  `save_api_request=false`, and deletes the session with `privacy_erasure` as soon as the attestation is
+  signed. Whether Didit also keeps a face-search embedding for duplicate detection depends on the
+  workflow's settings in the Didit console; the code doesn't set it. Didit's own retention is a console setting
   (unlimited by default), and it uses data for model training unless the organisation opts out; the
   operator must set both. Likeness keeps the outcome and the session ID, never the date of birth,
   document images or selfie.
@@ -269,6 +275,14 @@ Roadmap:
   - sponsored gas through a paymaster;
   - Circle's native USDC on Arbitrum One;
   - a legal entity, and licence terms reviewed by counsel for likeness licensing.
+- **Video ad renders:** full short ads from a licensed face, under the same licence, receipt and
+  verifier.
+- **Voice licensing:** creators license their voice on the same terms, with the same consent, payment and
+  revocation.
+- **One person, one creator:** today one person could register more than one wallet, because nothing
+  compares identities across wallets. The fix is a keyed duplicate-document check: an HMAC, under a
+  server secret, of the ID document's country, type and number from Didit's decision, refusing a second
+  attestation with the same value without storing the number itself.
 - **Sponsored gas via EIP-7702 + paymaster,** so new wallets need no top-up at all.
 - **Casting calls:** a brand posts a brief, and matching creators choose whether to reveal themselves.
 - **"Casting calls only" mode:** a creator is never browsable, and appears only to brands they answer.
@@ -296,6 +310,14 @@ None of these exist in a production build, even if their variables are set; leav
 - **Test renderer** (`DEV_RENDERER=1`): a clearly marked TEST RENDER when there is no Gemini key.
 - Creators, brands and licences made from `localhost` against the Arbitrum Sepolia contracts are test
   data; their profiles and samples live in the local store (`web/.data`), never in production's.
+
+Test data on the Arbitrum Sepolia contracts, from the 2026-10-12 local run:
+
+- **Creator** `0x61af3406429be02f1e89c0af8c0dcea630a55db5`: a Didit-verified test registration (passive
+  liveness); its public photo and samples exist only in that local store, so it isn't listed on the
+  production marketplace.
+- **Brand** `0xfd09F33ea39051D10A417B21E4567A173E91C4C7`: the server-held test brand, "Brew & Co.".
+- **Licence #1** between them: Active, two paid renders, 16.00 USDC left in escrow.
 
 ## Contributor notes
 
