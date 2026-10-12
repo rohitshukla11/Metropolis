@@ -17,6 +17,7 @@ import type { SignedAction } from "@/lib/auth";
 import { verifyAction } from "./auth";
 import { dbGet, dbPut } from "./db";
 import { faceMatch, verificationLevel } from "./didit";
+import { bestMatch, sampleThreshold } from "./facecheck";
 import { compareFaces, FaceMatchError, localThreshold } from "./facematch";
 import { HttpError } from "./http";
 import { logMedia, publishPreview, removeMedia, sha256 } from "./media";
@@ -59,22 +60,36 @@ export async function publicProfiles(addresses: string[]): Promise<Record<string
   return Object.fromEntries(out.map((p) => [p.address, p]));
 }
 
-async function matches(candidate: Uint8Array, reference: Uint8Array): Promise<{ ok: boolean; detail: string }> {
-  if (verificationLevel() === "full") {
-    const m = await faceMatch(candidate, reference, Number(process.env.DIDIT_CAPTURE_MATCH_THRESHOLD ?? 60));
-    return { ok: m.status === "Approved", detail: `Didit 1:1 ${m.status}${m.score !== null ? `, score ${m.score.toFixed(1)}` : ""}` };
-  }
-  try {
-    const sim = await compareFaces(new Uint8Array(candidate), new Uint8Array(reference));
-    return { ok: sim >= localThreshold(), detail: `local similarity ${sim.toFixed(2)} (needs ${localThreshold()})` };
-  } catch (e) {
-    if (e instanceof FaceMatchError) throw new HttpError(e.status, e.message);
-    throw e;
-  }
+/**
+ * Match a candidate against the creator's attested reference photos; the best of them counts (see
+ * ./facecheck). A sample has a lower local bar than a photo: Likeness rendered it from the attested set.
+ */
+async function matches(candidate: Uint8Array, references: Uint8Array[], kind: "photo" | "sample"): Promise<{ ok: boolean; detail: string }> {
+  const threshold = kind === "sample" ? sampleThreshold() : localThreshold();
+  const m = await bestMatch(references, async (reference) => {
+    if (verificationLevel() === "full") {
+      const r = await faceMatch(candidate, reference, Number(process.env.DIDIT_CAPTURE_MATCH_THRESHOLD ?? 60));
+      return { ok: r.status === "Approved", score: r.score, detail: `Didit 1:1 ${r.status}${r.score !== null ? `, score ${r.score.toFixed(1)}` : ""}` };
+    }
+    try {
+      const sim = await compareFaces(new Uint8Array(candidate), new Uint8Array(reference));
+      return { ok: sim >= threshold, score: sim, detail: `local similarity ${sim.toFixed(2)} (needs ${threshold})` };
+    } catch (e) {
+      if (e instanceof FaceMatchError) throw new HttpError(e.status, e.message);
+      throw e;
+    }
+  });
+  return { ok: m.ok, detail: `best of ${m.tried} attested photo${m.tried === 1 ? "" : "s"}: ${m.detail}` };
+}
+
+/** Every reference must be one of the creator's attested photos (its sha256 is in the sealed set). */
+function checkReferences(set: ReferenceSet, references: Uint8Array[]) {
+  if (references.length === 0 || references.length > set.digests.length) throw new HttpError(400, "send one to three of your attested photos");
+  if (references.some((r) => !set.digests.includes(sha256(r)))) throw new HttpError(422, "a reference photo is not one of your attested photos");
 }
 
 /** Set (or change) the public photo. `photo` and `reference` are JPEG/PNG bytes. */
-export async function setPublicPhoto(input: { address: Address; auth: SignedAction; set: ReferenceSet; reference: Uint8Array; photo: Uint8Array }) {
+export async function setPublicPhoto(input: { address: Address; auth: SignedAction; set: ReferenceSet; references: Uint8Array[]; photo: Uint8Array }) {
   const who = key(input.address);
   const photoSha = sha256(input.photo);
   const fields = await verifyAction(input.auth, "set public photo", input.address);
@@ -86,10 +101,10 @@ export async function setPublicPhoto(input: { address: Address; auth: SignedActi
   assertCiphertext(input.set);
   if (input.set.creator !== who) throw new HttpError(422, "reference set belongs to another creator");
   if ((await referenceSetHash(input.set)) !== creator.referenceSetHash) throw new HttpError(422, "reference set is not the one attested on chain");
-  if (!input.set.digests.includes(sha256(input.reference))) throw new HttpError(422, "the reference photo is not one of your attested photos");
+  checkReferences(input.set, input.references);
 
   try {
-    const m = await matches(input.photo, input.reference);
+    const m = await matches(input.photo, input.references, "photo");
     if (!m.ok) {
       await logMedia({ action: "refused", kind: "profile-photo", owner: who, by: who, reason: `face does not match the attested face (${m.detail})` });
       throw new HttpError(422, `this photo doesn't match your verified face (${m.detail})`);
@@ -101,7 +116,7 @@ export async function setPublicPhoto(input: { address: Address; auth: SignedActi
     await logMedia({ action: "published", sha256: rec.sha256, kind: "profile-photo", owner: who, by: who, reason: m.detail });
     return { photo: photoUrl(who, rec.sha256), sha256: rec.sha256 };
   } finally {
-    input.reference.fill(0);
+    input.references.forEach((r) => r.fill(0));
     input.photo.fill(0);
   }
 }
@@ -111,7 +126,7 @@ export async function setPublicPhoto(input: { address: Address; auth: SignedActi
  * labelled so in its watermark and C2PA manifest and on every card; it must still face-match one of the
  * creator's attested reference photos (sent decrypted with the sealed set, checked as above).
  */
-export async function setPublicPhotoFromSample(input: { address: Address; auth: SignedAction; sampleId: string; set: ReferenceSet; reference: Uint8Array }) {
+export async function setPublicPhotoFromSample(input: { address: Address; auth: SignedAction; sampleId: string; set: ReferenceSet; references: Uint8Array[] }) {
   const who = key(input.address);
   const fields = await verifyAction(input.auth, "set public photo from sample", input.address);
   if (fields.wallet !== who || fields.sample !== input.sampleId) throw new HttpError(401, "signature is for another sample");
@@ -121,7 +136,7 @@ export async function setPublicPhotoFromSample(input: { address: Address; auth: 
   assertCiphertext(input.set);
   if (input.set.creator !== who) throw new HttpError(422, "reference set belongs to another creator");
   if ((await referenceSetHash(input.set)) !== creator.referenceSetHash) throw new HttpError(422, "reference set is not the one attested on chain");
-  if (!input.set.digests.includes(sha256(input.reference))) throw new HttpError(422, "the reference photo is not one of your attested photos");
+  checkReferences(input.set, input.references);
 
   const { publishedSample } = await import("./samples");
   const sample = await publishedSample(who, input.sampleId);
@@ -132,7 +147,7 @@ export async function setPublicPhotoFromSample(input: { address: Address; auth: 
   const candidate = new Uint8Array(m.bytes);
 
   try {
-    const match = await matches(candidate, input.reference);
+    const match = await matches(candidate, input.references, "sample");
     if (!match.ok) {
       await logMedia({ action: "refused", kind: "profile-photo", owner: who, by: who, reason: `sample ${input.sampleId} does not match the attested face (${match.detail})` });
       throw new HttpError(422, `this sample doesn't look enough like your verified face to be your public photo (${match.detail}). Pick another, or use a real photo.`);
@@ -145,7 +160,7 @@ export async function setPublicPhotoFromSample(input: { address: Address; auth: 
     await logMedia({ action: "published", sha256: rec.sha256, kind: "profile-photo", owner: who, by: who, reason: `AI-generated, from sample ${input.sampleId}; ${match.detail}` });
     return { photo: photoUrl(who, rec.sha256), sha256: rec.sha256, ai: true };
   } finally {
-    input.reference.fill(0);
+    input.references.forEach((r) => r.fill(0));
     candidate.fill(0);
   }
 }

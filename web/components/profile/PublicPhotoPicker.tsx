@@ -86,18 +86,18 @@ export function PublicPhotoPicker({
         // An approved sample: the server reads it from storage and checks it against an attested photo.
         const r = await api<{ photo: string }>("/api/profiles/photo", {
           method: "POST",
-          body: JSON.stringify({ address: me, auth: await sign("set public photo from sample", { sample: choice.sample }), fromSample: choice.sample, set: src.set, reference: toB64(src.photos[0]) }),
+          body: JSON.stringify({ address: me, auth: await sign("set public photo from sample", { sample: choice.sample }), fromSample: choice.sample, set: src.set, references: src.photos.map(toB64) }),
         });
         onDone(r.photo);
         return;
       }
       const photo = choice === "camera" ? fresh! : src.photos[choice];
-      // The attested reference it is checked against: another of the three when one of them was chosen.
-      const reference = src.photos[choice === "camera" ? 0 : (choice + 1) % src.photos.length];
+      // Checked against the attested photos: all three for a new one, the other two when one of them was chosen.
+      const references = src.photos.filter((_, i) => choice === "camera" || i !== choice);
       const auth = await sign("set public photo", { "photo sha256": await sha256Hex(photo) });
       const r = await api<{ photo: string }>("/api/profiles/photo", {
         method: "POST",
-        body: JSON.stringify({ address: wallet.address, auth, set: src.set, reference: toB64(reference), photo: toB64(photo) }),
+        body: JSON.stringify({ address: wallet.address, auth, set: src.set, references: references.map(toB64), photo: toB64(photo) }),
       });
       onDone(r.photo);
     } catch (e) {

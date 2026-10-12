@@ -14,16 +14,18 @@ export const maxDuration = 300;
  */
 export async function POST(req: NextRequest) {
   try {
-    const b = (await req.json()) as { address?: string; auth?: SignedAction; remove?: boolean; set?: ReferenceSet; reference?: string; photo?: string; fromSample?: string };
+    const b = (await req.json()) as { address?: string; auth?: SignedAction; remove?: boolean; set?: ReferenceSet; reference?: string; references?: string[]; photo?: string; fromSample?: string };
+    // One to three attested reference photos (base64); `reference` is the older single-photo form.
+    const refs = (Array.isArray(b.references) ? b.references : b.reference ? [b.reference] : []).slice(0, 3).map((r) => new Uint8Array(Buffer.from(String(r), "base64")));
     const who = address(b.address);
     if (b.remove) return json(await removePublicPhoto(who, b.auth!));
     if (b.fromSample) {
-      if (!b.set || !b.reference) throw new HttpError(400, "send a reference photo and the reference set");
-      return json(await setPublicPhotoFromSample({ address: who, auth: b.auth!, sampleId: b.fromSample, set: b.set, reference: new Uint8Array(Buffer.from(b.reference, "base64")) }));
+      if (!b.set || refs.length === 0) throw new HttpError(400, "send your attested photos and the reference set");
+      return json(await setPublicPhotoFromSample({ address: who, auth: b.auth!, sampleId: b.fromSample, set: b.set, references: refs }));
     }
-    if (!b.set || !b.reference || !b.photo) throw new HttpError(400, "send the photo, a reference photo and the reference set");
+    if (!b.set || refs.length === 0 || !b.photo) throw new HttpError(400, "send the photo, your attested photos and the reference set");
     return json(
-      await setPublicPhoto({ address: who, auth: b.auth!, set: b.set, reference: new Uint8Array(Buffer.from(b.reference, "base64")), photo: new Uint8Array(Buffer.from(b.photo, "base64")) }),
+      await setPublicPhoto({ address: who, auth: b.auth!, set: b.set, references: refs, photo: new Uint8Array(Buffer.from(b.photo, "base64")) }),
     );
   } catch (e) {
     return fail(e);

@@ -99,7 +99,11 @@ describe.skipIf(!run)("public profiles, samples and brands", () => {
     const { setPublicPhoto } = await import("./profiles");
     const { sha256 } = await import("./media");
     const auth = await sign(creatorKey, "set public photo", { "photo sha256": sha256(stranger) });
-    await expect(setPublicPhoto({ address: creator, auth, set, reference: photos[0].slice(), photo: stranger.slice() })).rejects.toThrow(/doesn't match your verified face/);
+    // Checked against all three attested photos: the best of them still must not pass a stranger.
+    await expect(setPublicPhoto({ address: creator, auth, set, references: photos.map((p) => p.slice()), photo: stranger.slice() })).rejects.toThrow(/doesn't match your verified face/);
+    // A reference that is not one of the attested photos is refused before any matching.
+    const again = await sign(creatorKey, "set public photo", { "photo sha256": sha256(stranger) });
+    await expect(setPublicPhoto({ address: creator, auth: again, set, references: [stranger.slice()], photo: stranger.slice() })).rejects.toThrow(/not one of your attested photos/);
   }, 120_000);
 
   it.skipIf(!facesAvailable)("publishes a matching photo: 512 px, watermarked, labelled by the verifier", async () => {
@@ -108,7 +112,7 @@ describe.skipIf(!run)("public profiles, samples and brands", () => {
     const { verifyFile } = await import("./verify");
     const chosen = photos[1].slice();
     const auth = await sign(creatorKey, "set public photo", { "photo sha256": sha256(chosen) });
-    const r = await setPublicPhoto({ address: creator, auth, set, reference: photos[0].slice(), photo: chosen });
+    const r = await setPublicPhoto({ address: creator, auth, set, references: [photos[0].slice(), photos[2].slice()], photo: chosen });
     expect(r.photo).toMatch(/^\/api\/media\/profile\//);
     const m = (await mediaBytes(r.sha256))!;
     const meta = await sharp(m.bytes).metadata();
@@ -230,7 +234,7 @@ describe.skipIf(!run)("public profiles, samples and brands", () => {
   it("refuses a sample that is not one of the creator's approved samples", async () => {
     const { setPublicPhotoFromSample } = await import("./profiles");
     const auth = await sign(creatorKey, "set public photo from sample", { sample: "not-a-sample" });
-    await expect(setPublicPhotoFromSample({ address: creator, auth, sampleId: "not-a-sample", set, reference: photos[0].slice() })).rejects.toThrow(/approved samples/);
+    await expect(setPublicPhotoFromSample({ address: creator, auth, sampleId: "not-a-sample", set, references: [photos[0].slice()] })).rejects.toThrow(/approved samples/);
   });
 
   it.skipIf(!facesAvailable)("uses an approved sample as the public photo, labelled AI-generated everywhere", async () => {
@@ -241,10 +245,10 @@ describe.skipIf(!run)("public profiles, samples and brands", () => {
     const s = (await mySamples(creator, await sign(creatorKey, "list my samples", {}))).find((x) => x.sha256 === published[1])!;
     // A signature for another sample does not carry over.
     const wrong = await sign(creatorKey, "set public photo from sample", { sample: "other" });
-    await expect(setPublicPhotoFromSample({ address: creator, auth: wrong, sampleId: s.id, set, reference: photos[0].slice() })).rejects.toThrow(/another sample/);
+    await expect(setPublicPhotoFromSample({ address: creator, auth: wrong, sampleId: s.id, set, references: [photos[0].slice()] })).rejects.toThrow(/another sample/);
 
     const auth = await sign(creatorKey, "set public photo from sample", { sample: s.id });
-    const r = await setPublicPhotoFromSample({ address: creator, auth, sampleId: s.id, set, reference: photos[0].slice() });
+    const r = await setPublicPhotoFromSample({ address: creator, auth, sampleId: s.id, set, references: photos.map((p) => p.slice()) });
     expect(r.ai).toBe(true);
     const p = await publicProfile(creator);
     expect(p.photo).toBe(r.photo);

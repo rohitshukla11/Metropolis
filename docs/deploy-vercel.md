@@ -92,6 +92,7 @@ Passkeys are bound to `likeness.website`, which covers `www.likeness.website` to
 | `VERIFICATION_LEVEL` | | yes | `free` or `full` |
 | `DIDIT_WORKFLOW_ID_FREE`, `DIDIT_WORKFLOW_ID_FULL` | | yes | The workflow for the chosen level |
 | `DIDIT_CAPTURE_MATCH_THRESHOLD` | | optional | |
+| `LOCAL_FACE_MATCH_THRESHOLD`, `SAMPLE_FACE_MATCH_THRESHOLD` | | optional | Public-profile face match: a real photo (0.55), an approved sample (0.45) |
 | `DIDIT_WEBHOOK_SECRET` | 🔒 | optional | Only with the Didit webhook |
 | `GEMINI_API_KEY` | 🔒 | yes | Billed key; without it renders are refused |
 | `GEMINI_IMAGE_MODEL`, `GEMINI_IMAGE_SIZE`, `GEMINI_FILTER_MODEL` | | optional | |
