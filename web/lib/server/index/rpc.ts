@@ -14,6 +14,7 @@ import { LicenseRegistryAbi } from "@/lib/abi/LicenseRegistry";
 import { deployment, requireAddress } from "@/lib/deployment";
 import { pub, rpcUrl, singleton } from "../chain";
 import { fileGet, filePut, localDir } from "../files";
+import { timestampsFromLogs, type LogWithTime } from "./timestamps";
 import { emptyHistory, type History } from "./types";
 
 // Blocks per eth_getLogs (the public Arbitrum Sepolia RPC answered 500,000-block ranges for these
@@ -26,7 +27,8 @@ const abi = [...CreatorRegistryAbi, ...LicenseRegistryAbi, ...LicenseEscrowAbi];
 function cacheFile(): string {
   // One cache per RPC endpoint and start block: a local fork and the public testnet must never share
   // rows, and each new fork (same local URL, later start block) starts from an empty cache.
-  const tag = createHash("sha256").update(`${rpcUrl()}|${startBlock()}`).digest("base64url").slice(0, 16);
+  // v2: caches written before zero log timestamps were treated as unknown are ignored and rebuilt.
+  const tag = createHash("sha256").update(`v2|${rpcUrl()}|${startBlock()}`).digest("base64url").slice(0, 16);
   return `index-${deployment.chainId}-${tag}.json`;
 }
 
@@ -174,12 +176,8 @@ async function scan(h: History, file: string): Promise<History> {
   if (to < from) return h;
   logs.sort((x, y) => Number(x.blockNumber! - y.blockNumber!) || Number(x.logIndex! - y.logIndex!));
 
-  // Some RPCs return blockTimestamp on each log; otherwise it comes from the block header.
-  const times = new Map<bigint, number>();
-  for (const l of logs) {
-    const ts = (l as Log & { blockTimestamp?: Hex | bigint }).blockTimestamp;
-    if (ts !== undefined) times.set(l.blockNumber!, Number(ts));
-  }
+  // A real blockTimestamp on the log is used; a zero or missing one comes from the block header.
+  const times = timestampsFromLogs(logs as (Log & LogWithTime)[]);
   const missing = [...new Set(logs.map((l) => l.blockNumber!))].filter((b) => !times.has(b));
   for (const b of missing) times.set(b, Number((await client.getBlock({ blockNumber: b })).timestamp));
 
