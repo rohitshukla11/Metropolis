@@ -18,6 +18,7 @@ import { ProfileEditors, ProfileSummary, useCreatorProfile, type ProfileMode } f
 import { IconArrowRight } from "@/components/ds/icons";
 import { fmtDay, STATUS_LABEL, Tx } from "@/components/ui";
 import type { ActiveWallet } from "@/components/wallet/WalletProvider";
+import { releasedMessage } from "@/lib/dashboard-copy";
 import { KeyRelease } from "./KeyRelease";
 import { LicenceTable } from "./LicenceTable";
 import { RequestBar } from "./RequestBar";
@@ -118,6 +119,11 @@ export function CreatorView({ wallet, creator, onChanged, toggle }: { wallet: Ac
     if (m) requestAnimationFrame(() => document.getElementById("profile-editor")?.scrollIntoView({ behavior: "smooth", block: "start" }));
   };
   const unreleased = active.filter((l) => !l.release.released);
+  // The release box disappears once the photos are released, so the confirmation goes to the status line.
+  const releasedTo = (id: string) => {
+    setMsg(releasedMessage(id));
+    void load();
+  };
 
   return (
     <AppPage
@@ -225,7 +231,7 @@ export function CreatorView({ wallet, creator, onChanged, toggle }: { wallet: Ac
             {unreleased.map((l) => (
               <div key={l.id} className="flex flex-wrap items-center justify-between gap-2 rounded-[14px] bg-wait-bg px-3.5 py-2.5 text-[13px] text-wait">
                 <span>Renders for {pad(l.id)} wait until you release your photos to this licence.</span>
-                <KeyRelease licenceId={BigInt(l.id)} referenceSetHash={creator.referenceSetHash} released={l.release.released} onDone={load} />
+                <KeyRelease licenceId={BigInt(l.id)} referenceSetHash={creator.referenceSetHash} released={l.release.released} onDone={() => releasedTo(l.id)} />
               </div>
             ))}
             {licences.length === 0 ? (
