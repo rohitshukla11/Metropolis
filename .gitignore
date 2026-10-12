@@ -37,3 +37,4 @@ demo-renders/
 # project notes and screenshots: kept locally, not in the repository (integration docs are)
 docs/*
 !docs/integrations/
+!docs/deploy-vercel.md

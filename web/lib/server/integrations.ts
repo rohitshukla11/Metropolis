@@ -31,6 +31,14 @@ export function integrations(): Integration[] {
       whenMissing: "Wallets are off; only seeded dev wallets (DEV_WALLETS=1) can act in the UI",
     },
     {
+      key: "gas-drip",
+      name: "Gas top-up for new wallets",
+      configured: secret("DRIP_PRIVATE_KEY", "DRIP_KEY_FILE"),
+      turnsOn: `A one-time ETH top-up (${process.env.DRIP_AMOUNT_ETH ?? "0.0002"} ETH) to each new, empty wallet, so creators and brands never buy gas`,
+      env: ["DRIP_PRIVATE_KEY or DRIP_KEY_FILE", "DRIP_AMOUNT_ETH", "DRIP_PER_IP_PER_HOUR", "DRIP_PER_HOUR"],
+      whenMissing: "New wallets get no gas: registering and paying fail until the wallet holds Arbitrum Sepolia ETH",
+    },
+    {
       key: "dynamic-delegation",
       name: "Dynamic delegated access",
       configured: set("NEXT_PUBLIC_DYNAMIC_ENV_ID", "DYNAMIC_API_KEY", "DYNAMIC_WEBHOOK_SECRET") && secret("DYNAMIC_DELEGATION_PRIVATE_KEY_PEM", "DYNAMIC_DELEGATION_PRIVATE_KEY_FILE"),
