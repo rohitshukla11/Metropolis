@@ -38,3 +38,4 @@ demo-renders/
 docs/*
 !docs/integrations/
 !docs/deploy-vercel.md
+!docs/brand/

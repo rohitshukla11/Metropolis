@@ -1,7 +1,12 @@
+<p align="center"><img src="docs/brand/likeness-logo-seal.png" alt="Likeness: licensing protocol" width="640"></p>
+
 # Likeness: license your face to AI, on your terms
 
-**Live demo:** [likeness.website](https://likeness.website) · **Pitch video:** <PITCH_URL> ·
-**Demo video:** <DEMO_URL> · **Code:** [github.com/rohitshukla11/likeness.website](https://github.com/rohitshukla11/likeness.website)
+**Live demo:** [likeness.website](https://likeness.website) (Arbitrum Sepolia testnet) ·
+**Pitch video:** [youtu.be/EwHILIUUlgA](https://youtu.be/EwHILIUUlgA) ·
+**Demo video:** [youtu.be/JhEZXJPbroo](https://youtu.be/JhEZXJPbroo) ·
+**Code:** [github.com/rohitshukla11/likeness.website](https://github.com/rohitshukla11/likeness.website) ·
+**X:** [@likeness_web](https://x.com/likeness_web)
 
 Likeness is a likeness-licensing protocol on Arbitrum, with a reference app on top, running as a testnet
 demo on Arbitrum Sepolia. Real, verified adults license their face to brands and AI tools, get paid in
@@ -159,7 +164,9 @@ the app); they were not measured on the live chain, so no times are given for th
   pays the creator.
 - **Go-to-market:** start with AI UGC ad tools and the creators who already make UGC ads. Tools get a
   catalogue of verified faces with clear terms; creators get paid every time their face is used.
-- **Demand validation:** [__ creators on the waitlist, __ tools in conversation].
+- **Demand validation:** we've spoken with creators and brands directly. Creators described the hustle of
+  shoots (travel, long days, reshoots) for a one-time fee; brands described delayed content, slipping
+  shoot dates and the effort of recreating an ad for every new variation.
 
 ## Running it locally
 
@@ -265,6 +272,10 @@ Limitations today:
 
 Roadmap:
 
+- **Next: video ad renders:** full short ads from a licensed face, under the same licence, receipt and
+  verifier.
+- **Next: voice licensing:** creators license their voice on the same terms, with the same consent, payment and
+  revocation.
 - **Path to mainnet.** Today Likeness runs on Arbitrum Sepolia, a testnet. Before it moves to Arbitrum
   One:
   - an independent audit of the four contracts, especially the escrow and the payout logic;
@@ -275,10 +286,6 @@ Roadmap:
   - sponsored gas through a paymaster;
   - Circle's native USDC on Arbitrum One;
   - a legal entity, and licence terms reviewed by counsel for likeness licensing.
-- **Video ad renders:** full short ads from a licensed face, under the same licence, receipt and
-  verifier.
-- **Voice licensing:** creators license their voice on the same terms, with the same consent, payment and
-  revocation.
 - **One person, one creator:** today one person could register more than one wallet, because nothing
   compares identities across wallets. The fix is a keyed duplicate-document check: an HMAC, under a
   server secret, of the ID document's country, type and number from Didit's decision, refusing a second
